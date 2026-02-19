@@ -1,3 +1,3 @@
 clone repo and include dpdk as submodule
 
-`git clone --recurse-submodules <repo-url>>`
+`git clone --recurse-submodules https://github.com/watrgoat/alb.git`
