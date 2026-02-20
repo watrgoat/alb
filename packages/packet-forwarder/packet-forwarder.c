@@ -15,11 +15,17 @@
 #define RX_RING_SIZE 1024
 #define TX_RING_SIZE 1024
 
-#define NUM_MBUFS 8191
+#define NUM_MBUFS 65535
 #define MBUF_CACHE_SIZE 250
 #define BURST_SIZE 32
 
-static volatile uint64_t total_tx = 0;
+static volatile uint64_t tx_counts[RTE_MAX_LCORE];
+
+struct lcore_args {
+    struct rte_mempool *mbuf_pool;
+    uint16_t port;
+    uint16_t queue;
+};
 
 /* basicfwd.c: Basic DPDK skeleton forwarding example. */
 
@@ -30,10 +36,11 @@ static volatile uint64_t total_tx = 0;
 
 /* Main functional part of port initialization. 8< */
 static inline int
-port_init(uint16_t port, struct rte_mempool *mbuf_pool)
+port_init(uint16_t port, struct rte_mempool *mbuf_pool, uint16_t nb_queues)
 {
 	struct rte_eth_conf port_conf;
-	const uint16_t rx_rings = 1, tx_rings = 1;
+	const uint16_t rx_rings = 1;
+	const uint16_t tx_rings = nb_queues; // main core for stats
 	uint16_t nb_rxd = RX_RING_SIZE;
 	uint16_t nb_txd = TX_RING_SIZE;
 	int retval;
@@ -117,12 +124,16 @@ port_init(uint16_t port, struct rte_mempool *mbuf_pool)
 
  /* Basic forwarding application lcore. 8< */
 static int
-lcore_main(void* arg)
+lcore_tx(void* arg)
 {
-	uint16_t port = 0;
+
 	uint16_t p;
 	struct rte_mbuf *bufs[BURST_SIZE];
-	struct rte_mempool *mbuf_pool = arg;
+
+	struct lcore_args *args = arg;
+    struct rte_mempool *mbuf_pool = args->mbuf_pool;
+    uint16_t port  = args->port;
+    uint16_t queue = args->queue;
 
 	/*
 	 * Check that the port is on the same NUMA node as the polling thread
@@ -184,8 +195,8 @@ lcore_main(void* arg)
         for (int i = 0; i < BURST_SIZE; i++)
             rte_mbuf_refcnt_update(bufs[i], 1);
 
-		uint16_t nb_tx = rte_eth_tx_burst(port, 0, bufs, BURST_SIZE);
-		total_tx += nb_tx;
+		uint16_t nb_tx = rte_eth_tx_burst(port, queue, bufs, BURST_SIZE);
+		tx_counts[rte_lcore_id()] += nb_tx;
 
         // refcount back down for any that weren't sent
         for (int i = nb_tx; i < BURST_SIZE; i++)
@@ -211,6 +222,24 @@ lcore_rx(void *arg)
 }
 /* >8 End Basic forwarding application lcore. */
 
+static __rte_noreturn void
+lcore_main(void)
+{
+	uint64_t last = 0;
+
+	for (;;) {
+		rte_delay_us_sleep(1000000); // 1 second
+
+		uint64_t current = 0;
+		unsigned id;
+		RTE_LCORE_FOREACH_WORKER(id)
+			current += tx_counts[id];
+
+		uint64_t pps = current - last;
+		last = current;
+		printf("TX: %"PRIu64" pps  (%.2f Mpps)\n", pps, pps / 1e6);
+	}
+}
 /*
  * The main function, which does initialization and calls the per-lcore
  * functions.
@@ -221,12 +250,15 @@ main(int argc, char *argv[])
 	struct rte_mempool *mbuf_pool;
 	unsigned nb_ports;
 	uint16_t portid;
+	uint16_t lcore_id;
 
 	/* Initializion the Environment Abstraction Layer (EAL). 8< */
 	int ret = rte_eal_init(argc, argv);
 	if (ret < 0)
 		rte_exit(EXIT_FAILURE, "Error with EAL initialization\n");
 	/* >8 End of initialization the Environment Abstraction Layer (EAL). */
+
+	uint16_t nb_tx_lcores = rte_lcore_count() - 2;
 
 	argc -= ret;
 	argv += ret;
@@ -239,8 +271,8 @@ main(int argc, char *argv[])
 	/* Creates a new mempool in memory to hold the mbufs. */
 
 	/* Allocates mempool to hold the mbufs. 8< */
-	mbuf_pool = rte_pktmbuf_pool_create("MBUF_POOL", NUM_MBUFS * nb_ports,
-		MBUF_CACHE_SIZE, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
+	mbuf_pool = rte_pktmbuf_pool_create("MBUF_POOL", NUM_MBUFS * rte_lcore_count(),
+    	MBUF_CACHE_SIZE, 0, RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
 	/* >8 End of allocating mempool to hold mbuf. */
 
 	if (mbuf_pool == NULL)
@@ -248,24 +280,33 @@ main(int argc, char *argv[])
 
 	/* Initializing all ports. 8< */
 	RTE_ETH_FOREACH_DEV(portid)
-		if (port_init(portid, mbuf_pool) != 0)
+		if (port_init(portid, mbuf_pool, nb_tx_lcores) != 0)
 			rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu16 "\n",
 					portid);
 	/* >8 End of initializing all ports. */
 
-	rte_eal_remote_launch(lcore_main, mbuf_pool, 1); // tx
-	rte_eal_remote_launch(lcore_rx, NULL, 2);         // rx drain
+	// tx
+	struct lcore_args args[RTE_MAX_LCORE];
+	
+	unsigned lcores[RTE_MAX_LCORE];
+	int nb_lcores = 0;
 
-	uint64_t last = 0;
-	for (;;) {
-		rte_delay_us_sleep(1000000); // 1 second
-		uint64_t current = total_tx;
-		uint64_t pps = current - last;
-		last = current;
-		printf("TX: %"PRIu64" pps  (%.2f Mpps)\n", pps, pps / 1e6);
+	RTE_LCORE_FOREACH_WORKER(lcore_id)
+		lcores[nb_lcores++] = lcore_id;
+
+	// last worker does rx, rest do tx
+	for (int i = 0; i < nb_lcores - 1; i++) {
+		args[i].mbuf_pool = mbuf_pool;
+		args[i].port  = 0;
+		args[i].queue = i;
+		rte_eal_remote_launch(lcore_tx, &args[i], lcores[i]);
 	}
 
-	/* >8 End of called on single lcore. */
+	// rx drain
+	rte_eal_remote_launch(lcore_rx, NULL, lcores[nb_lcores - 1]);
+
+	// main core - stats
+	lcore_main();	
 
 	/* clean up the EAL */
 	rte_eal_cleanup();
