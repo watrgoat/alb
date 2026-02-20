@@ -10,6 +10,7 @@
 #include <rte_cycles.h>
 #include <rte_lcore.h>
 #include <rte_mbuf.h>
+#include <sys/types.h>
 
 #define RX_RING_SIZE 1024
 #define TX_RING_SIZE 1024
@@ -17,6 +18,8 @@
 #define NUM_MBUFS 8191
 #define MBUF_CACHE_SIZE 250
 #define BURST_SIZE 32
+
+static volatile uint64_t total_tx = 0;
 
 /* basicfwd.c: Basic DPDK skeleton forwarding example. */
 
@@ -113,55 +116,98 @@ port_init(uint16_t port, struct rte_mempool *mbuf_pool)
  */
 
  /* Basic forwarding application lcore. 8< */
-static __rte_noreturn void
-lcore_main(void)
+static int
+lcore_main(void* arg)
 {
-	uint16_t port;
+	uint16_t port = 0;
+	uint16_t p;
+	struct rte_mbuf *bufs[BURST_SIZE];
+	struct rte_mempool *mbuf_pool = arg;
 
 	/*
 	 * Check that the port is on the same NUMA node as the polling thread
 	 * for best performance.
 	 */
-	RTE_ETH_FOREACH_DEV(port)
-		if (rte_eth_dev_socket_id(port) >= 0 &&
-				rte_eth_dev_socket_id(port) !=
+	RTE_ETH_FOREACH_DEV(p)
+		if (rte_eth_dev_socket_id(p) >= 0 &&
+				rte_eth_dev_socket_id(p) !=
 						(int)rte_socket_id())
 			printf("WARNING, port %u is on remote NUMA node to "
 					"polling thread.\n\tPerformance will "
-					"not be optimal.\n", port);
+					"not be optimal.\n", p);
 
-	printf("\nCore %u forwarding packets. [Ctrl+C to quit]\n",
-			rte_lcore_id());
+	if (rte_pktmbuf_alloc_bulk(mbuf_pool, bufs, BURST_SIZE) != 0)
+        rte_exit(EXIT_FAILURE, "Failed to allocate packet buffers\n");
+
+	for (int i = 0; i < BURST_SIZE; i++) {
+        struct rte_mbuf *pkt = bufs[i];
+
+        char *data = rte_pktmbuf_append(pkt,
+            sizeof(struct rte_ether_hdr) +
+            sizeof(struct rte_ipv4_hdr) +
+            sizeof(struct rte_udp_hdr));
+
+        struct rte_ether_hdr *eth = (struct rte_ether_hdr *)data;
+        struct rte_ipv4_hdr  *ip  = (struct rte_ipv4_hdr *)(eth + 1);
+        struct rte_udp_hdr   *udp = (struct rte_udp_hdr *)(ip + 1);
+
+        memset(&eth->dst_addr, 0xff, RTE_ETHER_ADDR_LEN);
+        rte_eth_macaddr_get(port, &eth->src_addr);
+        eth->ether_type = rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4);
+
+        ip->version_ihl   = 0x45;
+        ip->total_length  = rte_cpu_to_be_16(
+            sizeof(struct rte_ipv4_hdr) + sizeof(struct rte_udp_hdr));
+        ip->time_to_live  = 64;
+        ip->next_proto_id = IPPROTO_UDP;
+        ip->src_addr      = rte_cpu_to_be_32(RTE_IPV4(192,168,1,1));
+        ip->dst_addr      = rte_cpu_to_be_32(RTE_IPV4(192,168,1,2));
+        ip->hdr_checksum  = rte_ipv4_cksum(ip);
+
+        udp->src_port  = rte_cpu_to_be_16(1234);
+        udp->dst_port  = rte_cpu_to_be_16(5678);
+        udp->dgram_len = rte_cpu_to_be_16(sizeof(struct rte_udp_hdr));
+
+        // reference count must stay at 1 so the driver doesn't free it
+        rte_mbuf_refcnt_set(pkt, 1);
+    }
+
+	printf("\nCore %u transmitting packets. [Ctrl+C to quit]\n", rte_lcore_id());
 
 	/* Main work of application loop. 8< */
 	for (;;) {
 		/*
-		 * Receive packets on a port and forward them on the paired
-		 * port. The mapping is 0 -> 1, 1 -> 0, 2 -> 3, 3 -> 2, etc.
+		 * Send packets on the transmit buffer
 		 */
-		RTE_ETH_FOREACH_DEV(port) {
+		 
+		 // bump refcount before each burst so the driver doesn't free the mbufs
+        for (int i = 0; i < BURST_SIZE; i++)
+            rte_mbuf_refcnt_update(bufs[i], 1);
 
-			/* Get burst of RX packets, from first port of pair. */
-			struct rte_mbuf *bufs[BURST_SIZE];
-			const uint16_t nb_rx = rte_eth_rx_burst(port, 0,
-					bufs, BURST_SIZE);
+		uint16_t nb_tx = rte_eth_tx_burst(port, 0, bufs, BURST_SIZE);
+		total_tx += nb_tx;
 
-			if (unlikely(nb_rx == 0))
-				continue;
-
-			/* Send burst of TX packets, to second port of pair. */
-			const uint16_t nb_tx = rte_eth_tx_burst(port ^ 1, 0,
-					bufs, nb_rx);
-
-			/* Free any unsent packets. */
-			if (unlikely(nb_tx < nb_rx)) {
-				uint16_t buf;
-				for (buf = nb_tx; buf < nb_rx; buf++)
-					rte_pktmbuf_free(bufs[buf]);
-			}
-		}
+        // refcount back down for any that weren't sent
+        for (int i = nb_tx; i < BURST_SIZE; i++)
+            rte_mbuf_refcnt_update(bufs[i], -1);
 	}
 	/* >8 End of loop. */
+
+	return 0;
+}
+
+static int
+lcore_rx(void *arg)
+{
+    struct rte_mbuf *bufs[BURST_SIZE];
+    uint16_t port = 0;
+
+    for (;;) {
+        uint16_t nb_rx = rte_eth_rx_burst(port, 0, bufs, BURST_SIZE);
+        for (int i = 0; i < nb_rx; i++)
+            rte_pktmbuf_free(bufs[i]);
+    }
+    return 0;
 }
 /* >8 End Basic forwarding application lcore. */
 
@@ -187,8 +233,8 @@ main(int argc, char *argv[])
 
 	/* Check that there is an even number of ports to send/receive on. */
 	nb_ports = rte_eth_dev_count_avail();
-	if (nb_ports < 2 || (nb_ports & 1))
-		rte_exit(EXIT_FAILURE, "Error: number of ports must be even\n");
+	if (nb_ports <= 0)
+		rte_exit(EXIT_FAILURE, "Error: must have at least 1 compatible port\n");
 
 	/* Creates a new mempool in memory to hold the mbufs. */
 
@@ -207,11 +253,18 @@ main(int argc, char *argv[])
 					portid);
 	/* >8 End of initializing all ports. */
 
-	if (rte_lcore_count() > 1)
-		printf("\nWARNING: Too many lcores enabled. Only 1 used.\n");
+	rte_eal_remote_launch(lcore_main, mbuf_pool, 1); // tx
+	rte_eal_remote_launch(lcore_rx, NULL, 2);         // rx drain
 
-	/* Call lcore_main on the main core only. Called on single lcore. 8< */
-	lcore_main();
+	uint64_t last = 0;
+	for (;;) {
+		rte_delay_us_sleep(1000000); // 1 second
+		uint64_t current = total_tx;
+		uint64_t pps = current - last;
+		last = current;
+		printf("TX: %"PRIu64" pps  (%.2f Mpps)\n", pps, pps / 1e6);
+	}
+
 	/* >8 End of called on single lcore. */
 
 	/* clean up the EAL */
