@@ -2,10 +2,10 @@
 # Copyright(c) 2010-2014 Intel Corporation
 
 # binary name
-APP = packet-forwarder
+APP = traffic-generator
 
 # all source are stored in SRCS-y
-SRCS-y := packet-forwarder.c
+SRCS-y := traffic-generator.c
 
 PKGCONF ?= pkg-config
 
