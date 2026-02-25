@@ -19,6 +19,13 @@
 #define MBUF_CACHE_SIZE 250
 #define BURST_SIZE 32
 
+#define DST_ADDR RTE_IPV4(192, 168, 1, 1)
+#define SRC_ADDR RTE_IPV4(192, 168, 1, 2)
+#define DST_PORT 5678
+#define SRC_PORT 1234
+
+#define PAYLOAD_SIZE 32
+
 static volatile uint64_t tx_counts[RTE_MAX_LCORE];
 
 struct lcore_args {
@@ -153,10 +160,13 @@ lcore_tx(void* arg)
 	for (int i = 0; i < BURST_SIZE; i++) {
         struct rte_mbuf *pkt = bufs[i];
 
+		uint16_t payload_len = PAYLOAD_SIZE;
+
         char *data = rte_pktmbuf_append(pkt,
             sizeof(struct rte_ether_hdr) +
             sizeof(struct rte_ipv4_hdr) +
-            sizeof(struct rte_udp_hdr));
+            sizeof(struct rte_udp_hdr) + 
+			payload_len);
 
         struct rte_ether_hdr *eth = (struct rte_ether_hdr *)data;
         struct rte_ipv4_hdr  *ip  = (struct rte_ipv4_hdr *)(eth + 1);
@@ -168,16 +178,16 @@ lcore_tx(void* arg)
 
         ip->version_ihl   = 0x45;
         ip->total_length  = rte_cpu_to_be_16(
-            sizeof(struct rte_ipv4_hdr) + sizeof(struct rte_udp_hdr));
+            sizeof(struct rte_ipv4_hdr) + sizeof(struct rte_udp_hdr) + payload_len);
         ip->time_to_live  = 64;
         ip->next_proto_id = IPPROTO_UDP;
-        ip->src_addr      = rte_cpu_to_be_32(RTE_IPV4(192,168,1,1));
-        ip->dst_addr      = rte_cpu_to_be_32(RTE_IPV4(192,168,1,2));
+        ip->src_addr      = rte_cpu_to_be_32(SRC_ADDR);
+        ip->dst_addr      = rte_cpu_to_be_32(DST_ADDR);
         ip->hdr_checksum  = rte_ipv4_cksum(ip);
 
-        udp->src_port  = rte_cpu_to_be_16(1234);
-        udp->dst_port  = rte_cpu_to_be_16(5678);
-        udp->dgram_len = rte_cpu_to_be_16(sizeof(struct rte_udp_hdr));
+        udp->src_port  = rte_cpu_to_be_16(SRC_PORT);
+        udp->dst_port  = rte_cpu_to_be_16(DST_PORT);
+        udp->dgram_len = rte_cpu_to_be_16(sizeof(struct rte_udp_hdr) + payload_len);
 
         // reference count must stay at 1 so the driver doesn't free it
         rte_mbuf_refcnt_set(pkt, 1);
