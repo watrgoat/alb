@@ -1,52 +1,47 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright(c) 2010-2014 Intel Corporation
 
-# binary name
 APP = alb
-
-# all source are stored in SRCS-y
 SRCS-y := main.c
+
+PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/..)
+BUILD_DIR := $(PROJECT_ROOT)/build
+CONFIG := $(PROJECT_ROOT)/config.yaml
 
 PKGCONF ?= pkg-config
 
-# Build using pkg-config variables if possible
 ifneq ($(shell $(PKGCONF) --exists libdpdk && echo 0),0)
 $(error "no installation of DPDK found")
 endif
 
-all: shared
-.PHONY: shared static
-shared: build/$(APP)-shared
-	ln -sf $(APP)-shared build/$(APP)
-static: build/$(APP)-static
-	ln -sf $(APP)-static build/$(APP)
-
 PC_FILE := $(shell $(PKGCONF) --path libdpdk 2>/dev/null)
-CFLAGS += -O3 $(shell $(PKGCONF) --cflags libdpdk)
+CFLAGS += -O3 $(shell $(PKGCONF) --cflags libdpdk) -DALLOW_EXPERIMENTAL_API
 LDFLAGS_SHARED = $(shell $(PKGCONF) --libs libdpdk) -lyaml
 LDFLAGS_STATIC = $(shell $(PKGCONF) --static --libs libdpdk) -lyaml
 
-CFLAGS += -DALLOW_EXPERIMENTAL_API
+all: shared
 
-build/$(APP)-shared: $(SRCS-y) Makefile $(PC_FILE) | build
+.PHONY: shared static
+shared: $(BUILD_DIR)/$(APP)
+static: $(BUILD_DIR)/$(APP)-static
+
+$(BUILD_DIR)/$(APP): $(SRCS-y) Makefile $(PC_FILE) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(SRCS-y) -o $@ $(LDFLAGS) $(LDFLAGS_SHARED)
 
-build/$(APP)-static: $(SRCS-y) Makefile $(PC_FILE) | build
+$(BUILD_DIR)/$(APP)-static: $(SRCS-y) Makefile $(PC_FILE) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(SRCS-y) -o $@ $(LDFLAGS) $(LDFLAGS_STATIC)
 
-build:
+$(BUILD_DIR):
 	@mkdir -p $@
 
 .PHONY: clean
 clean:
-	rm -f build/$(APP) build/$(APP)-static build/$(APP)-shared
-	test -d build && rmdir -p build || true
+	rm -rf $(BUILD_DIR)
 
 .PHONY: run
 run: shared
-	@echo "Run with: cd .. && sudo src/build/$(APP) -l 0 --vdev=net_null0 --vdev=net_null1"
-	@echo "Or for debug output: cd .. && sudo src/build/$(APP) -l 0 --vdev=net_null0 --vdev=net_null1 --log-level=*:debug"
+	@echo "Run: sudo $(BUILD_DIR)/$(APP) -l 0 --vdev=net_null0 --vdev=net_null1 -- $(CONFIG)"
 
 .PHONY: test
 test: shared
-	cd .. && sudo test/run_test.sh
+	sudo $(PROJECT_ROOT)/test/run_test.sh
