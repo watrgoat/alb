@@ -46,3 +46,7 @@ clean:
 run: shared
 	@echo "Run with: cd .. && sudo src/build/$(APP) -l 0 --vdev=net_null0 --vdev=net_null1"
 	@echo "Or for debug output: cd .. && sudo src/build/$(APP) -l 0 --vdev=net_null0 --vdev=net_null1 --log-level=*:debug"
+
+.PHONY: test
+test: shared
+	cd .. && sudo test/run_test.sh
