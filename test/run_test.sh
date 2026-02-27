@@ -6,18 +6,16 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-ALB_BIN="$PROJECT_DIR/src/build/alb"
+ALB_BIN="$PROJECT_DIR/build/alb"
 
-# Check if running as root
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root (sudo)"
     exit 1
 fi
 
-# Check if ALB binary exists
 if [ ! -f "$ALB_BIN" ]; then
     echo "ALB binary not found. Building..."
-    cd "$PROJECT_DIR/src" && make
+    make -C "$PROJECT_DIR/src"
 fi
 
 # Update config for test
@@ -58,6 +56,7 @@ cd "$PROJECT_DIR"
     --vdev=net_tap0,iface=dtap0 \
     --vdev=net_tap1,iface=dtap1 \
     --no-telemetry \
+    -- "$PROJECT_DIR/config.yaml" \
     2>&1 &
 ALB_PID=$!
 
