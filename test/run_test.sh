@@ -29,8 +29,8 @@ EOF
 echo "=== ALB Test with TAP Devices ==="
 echo ""
 echo "This will:"
-echo "  1. Start ALB with tap devices (dtap0 input, dtap1 output)"
-echo "  2. Send UDP packets to dtap0"
+echo "  1. Start ALB listening for UDP on port 5678"
+echo "  2. Send UDP packets to dtap0 with dst_port=5678"
 echo "  3. Receive rewritten packets on dtap1"
 echo ""
 
@@ -49,6 +49,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
+LISTEN_PORT=5678
+
 # Start ALB with tap devices
 echo "=== Starting ALB ==="
 cd "$PROJECT_DIR"
@@ -56,7 +58,7 @@ cd "$PROJECT_DIR"
     --vdev=net_tap0,iface=dtap0 \
     --vdev=net_tap1,iface=dtap1 \
     --no-telemetry \
-    -- "$PROJECT_DIR/config.yaml" \
+    -- "$PROJECT_DIR/config.yaml" "$LISTEN_PORT" \
     2>&1 &
 ALB_PID=$!
 
@@ -99,6 +101,6 @@ echo ""
 echo "=== Test Complete ==="
 echo ""
 echo "Expected behavior:"
-echo "  - Packets sent to dtap0 with dst_ip=192.168.1.1, dst_port=5678"
-echo "  - ALB rewrites dst to: ip=192.168.1.100, port=8080, mac=aa:bb:cc:dd:ee:ff"
-echo "  - Rewritten packets appear on dtap1"
+echo "  - Packets sent to dtap0 with dst_port=$LISTEN_PORT"
+echo "  - ALB filters for dst_port=$LISTEN_PORT, rewrites to backend config"
+echo "  - Rewritten packets appear on dtap1 with dst=192.168.1.100:8080"

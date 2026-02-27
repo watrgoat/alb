@@ -40,7 +40,8 @@ clean:
 
 .PHONY: run
 run: shared
-	@echo "Run: sudo $(BUILD_DIR)/$(APP) -l 0 --vdev=net_null0 --vdev=net_null1 -- $(CONFIG)"
+	@echo "Usage: sudo $(BUILD_DIR)/$(APP) -l 0 --vdev=net_null0 --vdev=net_null1 -- $(CONFIG) <listen_port>"
+	@echo "Example: sudo $(BUILD_DIR)/$(APP) -l 0 --vdev=net_null0 --vdev=net_null1 -- $(CONFIG) 5678"
 
 .PHONY: test
 test: shared
