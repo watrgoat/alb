@@ -33,6 +33,7 @@ struct backend_server {
 };
 
 static struct backend_server backend;
+static uint16_t listen_port;
 
 static int
 parse_mac(const char *str, struct rte_ether_addr *addr)
@@ -272,6 +273,11 @@ lcore_main(void)
 					(struct rte_udp_hdr *)((unsigned char *)ip_hdr +
 						(ip_hdr->version_ihl & 0x0F) * 4);
 
+				if (udp_hdr->dst_port != listen_port) {
+					rte_pktmbuf_free(m);
+					continue;
+				}
+
 				rte_ether_addr_copy(&backend.mac, &eth_hdr->dst_addr);
 				ip_hdr->dst_addr = backend.ip;
 				udp_hdr->dst_port = backend.port;
@@ -319,11 +325,16 @@ main(int argc, char *argv[])
 	argc -= ret;
 	argv += ret;
 
-	const char *config_file;
-	if (argc > 1)
-		config_file = argv[1];
-	else
-		rte_exit(EXIT_FAILURE, "Missing config file\n");
+	if (argc < 3)
+		rte_exit(EXIT_FAILURE, "Usage: alb <config.yaml> <listen_port>\n");
+
+	const char *config_file = argv[1];
+	listen_port = htons((uint16_t)atoi(argv[2]));
+
+	if (listen_port == 0)
+		rte_exit(EXIT_FAILURE, "Port must be non-zero\n");
+
+	printf("Listening for UDP packets on port %s\n", argv[2]);
 
 	if (load_config(config_file) < 0)
 		rte_exit(EXIT_FAILURE, "Failed to load config: %s\n", config_file);
