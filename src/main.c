@@ -319,8 +319,15 @@ main(int argc, char *argv[])
 	argc -= ret;
 	argv += ret;
 
-	if (load_config("config.yaml") < 0)
-		rte_exit(EXIT_FAILURE, "Failed to load config\n");
+	const char *config_file;
+	if (argc > 1)
+		config_file = argv[1];
+	else
+		rte_exit(EXIT_FAILURE, "Missing config file\n");
+
+	if (load_config(config_file) < 0)
+		rte_exit(EXIT_FAILURE, "Failed to load config: %s\n", config_file);
+
 
 	/* Check that there is an even number of ports to send/receive on. */
 	nb_ports = rte_eth_dev_count_avail();
