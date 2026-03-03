@@ -1,4 +1,3 @@
-// test/main.cpp
 #include <cstdio>
 #include <dlfcn.h>
 #include "strategy.h"
@@ -29,7 +28,6 @@ int main() {
 
     Strategy* balancer = create(servers, 3);
 
-    // simulate 10 packets and see where they go
     for (int i = 0; i < 10; i++) {
         StrategyInput input = {
             .packet_hash = (uint32_t)i,
