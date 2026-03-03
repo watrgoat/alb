@@ -5,7 +5,10 @@
 - packet_hash
 - packet_index
 */
-struct StrategyInput;
+struct StrategyInput {
+    uint32_t packet_hash;
+    uint32_t packet_index;
+};
 
 /* 
 ServerState can have
@@ -13,13 +16,20 @@ ServerState can have
 - active connections
 - weight
 */
-struct ServerState;
+struct ServerState {
+    uint32_t address; // ipv4
+    uint64_t mac; // mac
+
+    uint32_t active_connections;
+    uint32_t weight;
+};
 
 class Strategy {
 public:
     virtual ServerState* select(const StrategyInput& s) = 0;
+    virtual void update() = 0; // TODO: Implement program->lib update communication
     virtual ~Strategy() = default;
 };
 
-extern "C" Strategy* create_strategy();
+extern "C" Strategy* create_strategy(ServerState* servers, int count);
 extern "C" void destroy_strategy(StrategyInput* s);
