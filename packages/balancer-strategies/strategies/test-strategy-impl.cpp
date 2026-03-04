@@ -10,7 +10,7 @@ public:
 
     ServerState* select(const StrategyInput& s){
         ServerState* picked = &servers[current];
-        current = (current + 1) % count;
+        current = (current + 1) % count; // not thread safe, but good enough for testing
         return picked;
     }
 
