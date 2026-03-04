@@ -6,7 +6,7 @@ all: $(BUILD)/libteststrategy.so $(BUILD)/test_main
 
 $(BUILD)/libteststrategy.so: strategies/test-strategy-impl.cpp
 	mkdir -p $(BUILD)
-	$(CXX) -shared -fPIC $(CXXFLAGS) -o $@ $
+	$(CXX) -shared -fPIC $(CXXFLAGS) -o $@ $<
 
 $(BUILD)/test_main: test/main.cpp
 	mkdir -p $(BUILD)
