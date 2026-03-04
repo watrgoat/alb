@@ -1,0 +1,4 @@
+build --cxxopt=-std=c++17
+build --conlyopt=-std=gnu11
+build --copt=-Wall
+build --sandbox_writable_path=/usr/include

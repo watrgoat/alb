@@ -1,0 +1,17 @@
+{
+  "name": "ALB Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "llvm-vs-code-extensions.vscode-clangd",
+        "BazelBuild.vscode-bazel"
+      ]
+    }
+  },
+  "postCreateCommand": "bazel --version",
+  "remoteUser": "root"
+}
