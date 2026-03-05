@@ -1,5 +1,7 @@
 load("@dpdk//:cflags.bzl", "DPDK_COPTS")
 
+LINUX_ONLY = ["@platforms//os:linux"]
+
 cc_binary(
     name = "traffic-generator",
     srcs = ["traffic-generator.c"],
@@ -8,6 +10,7 @@ cc_binary(
         "-DALLOW_EXPERIMENTAL_API",
     ],
     deps = ["@dpdk"],
+    target_compatible_with = LINUX_ONLY,
 )
 
 # Verify the binary links successfully — works anywhere.
@@ -16,7 +19,8 @@ sh_test(
     srcs = ["test_build.sh"],
     data = [":traffic-generator"],
     env = {"BINARY": "$(rootpath :traffic-generator)"},
-    tags = ["local", "ci"],
+    tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
 )
 
 # Test EAL initialization and port setup with virtual device.
@@ -27,6 +31,7 @@ sh_test(
     env = {"BINARY": "$(rootpath :traffic-generator)"},
     size = "small",
     tags = ["ci", "no-sandbox"],
+    target_compatible_with = LINUX_ONLY,
 )
 
 # Test that packets are actually transmitted via net_null vdev.
@@ -37,4 +42,5 @@ sh_test(
     env = {"BINARY": "$(rootpath :traffic-generator)"},
     size = "small",
     tags = ["ci", "no-sandbox"],
+    target_compatible_with = LINUX_ONLY,
 )

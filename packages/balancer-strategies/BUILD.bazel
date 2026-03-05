@@ -1,8 +1,11 @@
+LINUX_ONLY = ["@platforms//os:linux"]
+
 cc_library(
     name = "strategy",
     hdrs = ["include/strategy.h"],
     strip_include_prefix = "include",
     visibility = ["//visibility:public"],
+    target_compatible_with = LINUX_ONLY,
 )
 
 cc_binary(
@@ -10,6 +13,7 @@ cc_binary(
     srcs = ["strategies/test-strategy-impl.cpp"],
     linkshared = True,
     deps = [":strategy"],
+    target_compatible_with = LINUX_ONLY,
 )
 
 cc_binary(
@@ -18,6 +22,7 @@ cc_binary(
     data = [":libteststrategy.so"],
     linkopts = ["-ldl"],
     deps = [":strategy"],
+    target_compatible_with = LINUX_ONLY,
 )
 
 sh_test(
@@ -31,5 +36,6 @@ sh_test(
         "TEST_MAIN": "$(rootpath :test_main)",
         "STRATEGY_LIB": "$(rootpath :libteststrategy.so)",
     },
-    tags = ["local", "ci"],
+    tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
 )
