@@ -2,7 +2,7 @@
 # Test that DPDK EAL initializes and ports come up with virtual devices.
 set -e
 
-OUTPUT=$(timeout 4s "$BINARY" \
+OUTPUT=$(timeout 4s stdbuf -oL "$BINARY" \
     -l 0,1,2 \
     --no-huge \
     --no-pci \
@@ -12,10 +12,6 @@ OUTPUT=$(timeout 4s "$BINARY" \
     -m 1024 \
     2>&1) || true
 
-echo "--- RAW OUTPUT ---"
-echo "$OUTPUT"
-echo "--- END OUTPUT ---"
-
 # Port must come up (net_null gives a MAC)
 if echo "$OUTPUT" | grep -q "Port 0 MAC:"; then
     echo "PASS: EAL init and port setup succeeded"
@@ -23,4 +19,5 @@ if echo "$OUTPUT" | grep -q "Port 0 MAC:"; then
 fi
 
 echo "FAIL: Port 0 did not initialize"
+echo "$OUTPUT"
 exit 1
