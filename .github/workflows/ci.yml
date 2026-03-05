@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bazelisk (pinned)
+        run: |
+          curl -fsSL https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64 \
+            -o bazel
+          chmod +x bazel
+          sudo mv bazel /usr/local/bin/bazel
+
+      - name: Install buildifier (pinned)
+        run: |
+          curl -fsSL https://github.com/bazelbuild/buildtools/releases/download/v7.3.1/buildifier-linux-amd64 \
+            -o buildifier
+          chmod +x buildifier
+          sudo mv buildifier /usr/local/bin/buildifier
+
+      - name: Install DPDK and dependencies
+        run: sudo apt-get update && sudo apt-get install -y dpdk-dev libnuma-dev
+
+      - name: Check Bazel formatting (warn-only for now)
+        run: |
+          if ! buildifier -mode=check -lint=warn -r .; then
+            echo "::warning::Bazel files need formatting. Run locally: buildifier -r ."
+            echo "::warning::Lint warnings are non-blocking for now; pre-commit enforcement will be added soon."
+          fi
+
+      - name: Build all targets
+        run: bazel build //...
+
+      - name: Run tests
+        run: bazel test //... --test_tag_filters=ci --test_output=all

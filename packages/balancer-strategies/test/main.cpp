@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 #include <dlfcn.h>
 #include "strategy.h"
 
@@ -11,7 +12,9 @@ int main() {
     };
 
     // load the strategy
-    void* handle = dlopen("./build/libteststrategy.so", RTLD_NOW);
+    const char* lib_path = getenv("STRATEGY_LIB");
+    if (!lib_path) lib_path = "./build/libteststrategy.so";
+    void* handle = dlopen(lib_path, RTLD_NOW);
     if (!handle) {
         printf("dlopen failed: %s\n", dlerror());
         return 1;
