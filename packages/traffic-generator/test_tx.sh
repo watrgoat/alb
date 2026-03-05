@@ -1,22 +1,25 @@
 #!/bin/bash
 # Test that the traffic generator actually transmits packets.
-# Uses net_null virtual device (accepts all TX, returns nothing on RX).
-# Runs for a few seconds and checks that TX pps output appears.
 set -e
 
 OUTPUT=$(timeout 4s "$BINARY" \
-    --vdev=net_null0 \
+    -l 0,1,2 \
     --no-huge \
     --no-pci \
+    --vdev=net_null0 \
     --file-prefix=tx_test \
-    -m 512 \
-    -l 0,1,2 2>&1) || true
+    -m 1024 \
+    2>&1) || true
+
+echo "--- RAW OUTPUT ---"
+echo "$OUTPUT"
+echo "--- END OUTPUT ---"
 
 # Should see at least one TX stats line with nonzero pps
-if ! echo "$OUTPUT" | grep -qE "TX: [1-9][0-9]* pps"; then
-    echo "FAIL: No TX packets detected"
-    echo "$OUTPUT"
-    exit 1
+if echo "$OUTPUT" | grep -qE "TX: [1-9][0-9]* pps"; then
+    echo "PASS: Traffic generator is transmitting packets"
+    exit 0
 fi
 
-echo "PASS: Traffic generator is transmitting packets"
+echo "FAIL: No TX packets detected"
+exit 1
