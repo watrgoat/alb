@@ -23,11 +23,11 @@ Inside the devcontainer (or any Linux environment with DPDK and Bazel installed)
 # Build everything
 bazel build //...
 
-# Run strategy test
-bazel test //packages/balancer-strategies:strategy_test
+# Run all tests (CI / native Linux)
+bazel test //...
 
-# Build traffic generator
-bazel build //packages/traffic-generator:traffic-generator
+# Run only tests that work locally in devcontainer (no DPDK runtime needed)
+bazel test //... --test_tag_filters=local
 ```
 
 ## Running the traffic generator

@@ -31,4 +31,5 @@ sh_test(
         "TEST_MAIN": "$(rootpath :test_main)",
         "STRATEGY_LIB": "$(rootpath :libteststrategy.so)",
     },
+    tags = ["local"],
 )
