@@ -4,16 +4,16 @@ cc_library(
     name = "strategy",
     hdrs = ["include/strategy.h"],
     strip_include_prefix = "include",
-    visibility = ["//visibility:public"],
     target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
 )
 
 cc_binary(
     name = "libteststrategy.so",
     srcs = ["strategies/test-strategy-impl.cpp"],
     linkshared = True,
-    deps = [":strategy"],
     target_compatible_with = LINUX_ONLY,
+    deps = [":strategy"],
 )
 
 cc_binary(
@@ -21,8 +21,8 @@ cc_binary(
     srcs = ["test/main.cpp"],
     data = [":libteststrategy.so"],
     linkopts = ["-ldl"],
-    deps = [":strategy"],
     target_compatible_with = LINUX_ONLY,
+    deps = [":strategy"],
 )
 
 sh_test(

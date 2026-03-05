@@ -9,8 +9,8 @@ cc_binary(
         "-O3",
         "-DALLOW_EXPERIMENTAL_API",
     ],
-    deps = ["@dpdk"],
     target_compatible_with = LINUX_ONLY,
+    deps = ["@dpdk"],
 )
 
 # Verify the binary links successfully — works anywhere.
@@ -26,21 +26,27 @@ sh_test(
 # Test EAL initialization and port setup with virtual device.
 sh_test(
     name = "eal_init_test",
+    size = "small",
     srcs = ["test_eal_init.sh"],
     data = [":traffic-generator"],
     env = {"BINARY": "$(rootpath :traffic-generator)"},
-    size = "small",
-    tags = ["ci", "no-sandbox"],
+    tags = [
+        "ci",
+        "no-sandbox",
+    ],
     target_compatible_with = LINUX_ONLY,
 )
 
 # Test that packets are actually transmitted via net_null vdev.
 sh_test(
     name = "tx_test",
+    size = "small",
     srcs = ["test_tx.sh"],
     data = [":traffic-generator"],
     env = {"BINARY": "$(rootpath :traffic-generator)"},
-    size = "small",
-    tags = ["ci", "no-sandbox"],
+    tags = [
+        "ci",
+        "no-sandbox",
+    ],
     target_compatible_with = LINUX_ONLY,
 )
