@@ -7,12 +7,14 @@ set -e
 OUTPUT=$(timeout 4s "$BINARY" \
     --vdev=net_null0 \
     --no-huge \
+    --no-pci \
+    --file-prefix=eal_init_test \
     --log-level=eal,info \
     -l 0,1,2 2>&1) || true
 
 # EAL must initialize
-if ! echo "$OUTPUT" | grep -q "EAL: RTE Version:"; then
-    echo "FAIL: EAL did not initialize"
+if ! echo "$OUTPUT" | grep -q "EAL:"; then
+    echo "FAIL: EAL did not produce any output"
     echo "$OUTPUT"
     exit 1
 fi

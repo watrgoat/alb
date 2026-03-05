@@ -7,6 +7,8 @@ set -e
 OUTPUT=$(timeout 4s "$BINARY" \
     --vdev=net_null0 \
     --no-huge \
+    --no-pci \
+    --file-prefix=tx_test \
     -l 0,1,2 2>&1) || true
 
 # Should see at least one TX stats line with nonzero pps
