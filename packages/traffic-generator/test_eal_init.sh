@@ -10,6 +10,7 @@ OUTPUT=$(timeout 4s "$BINARY" \
     --no-pci \
     --file-prefix=eal_init_test \
     --log-level=eal,info \
+    -m 512 \
     -l 0,1,2 2>&1) || true
 
 # EAL must initialize

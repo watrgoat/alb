@@ -17,5 +17,5 @@ jobs:
       - name: Build all targets
         run: bazel build //...
 
-      - name: Run all tests
-        run: bazel test //... --test_output=errors --spawn_strategy=local
+      - name: Run tests
+        run: bazel test //... --test_tag_filters=ci --test_output=errors --spawn_strategy=local

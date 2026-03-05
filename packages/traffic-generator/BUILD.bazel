@@ -16,26 +16,25 @@ sh_test(
     srcs = ["test_build.sh"],
     data = [":traffic-generator"],
     env = {"BINARY": "$(rootpath :traffic-generator)"},
-    tags = ["local"],
+    tags = ["local", "ci"],
 )
 
 # Test EAL initialization and port setup with virtual device.
-# Requires DPDK runtime (hugepages or --no-huge on Linux).
-# DPDK EAL needs access to /sys, /dev, /proc — must run outside sandbox.
 sh_test(
     name = "eal_init_test",
     srcs = ["test_eal_init.sh"],
     data = [":traffic-generator"],
     env = {"BINARY": "$(rootpath :traffic-generator)"},
     size = "small",
-    tags = ["no-sandbox"],
+    tags = ["ci", "no-sandbox"],
 )
 
+# Test that packets are actually transmitted via net_null vdev.
 sh_test(
     name = "tx_test",
     srcs = ["test_tx.sh"],
     data = [":traffic-generator"],
     env = {"BINARY": "$(rootpath :traffic-generator)"},
     size = "small",
-    tags = ["no-sandbox"],
+    tags = ["ci", "no-sandbox"],
 )

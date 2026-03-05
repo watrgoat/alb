@@ -9,6 +9,7 @@ OUTPUT=$(timeout 4s "$BINARY" \
     --no-huge \
     --no-pci \
     --file-prefix=tx_test \
+    -m 512 \
     -l 0,1,2 2>&1) || true
 
 # Should see at least one TX stats line with nonzero pps
