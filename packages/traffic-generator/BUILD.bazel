@@ -1,0 +1,52 @@
+load("@dpdk//:cflags.bzl", "DPDK_COPTS")
+
+LINUX_ONLY = ["@platforms//os:linux"]
+
+cc_binary(
+    name = "traffic-generator",
+    srcs = ["traffic-generator.c"],
+    copts = DPDK_COPTS + [
+        "-O3",
+        "-DALLOW_EXPERIMENTAL_API",
+    ],
+    target_compatible_with = LINUX_ONLY,
+    deps = ["@dpdk"],
+)
+
+# Verify the binary links successfully — works anywhere.
+sh_test(
+    name = "traffic-generator_build_test",
+    srcs = ["test_build.sh"],
+    data = [":traffic-generator"],
+    env = {"BINARY": "$(rootpath :traffic-generator)"},
+    tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
+)
+
+# Test EAL initialization and port setup with virtual device.
+sh_test(
+    name = "eal_init_test",
+    size = "small",
+    srcs = ["test_eal_init.sh"],
+    data = [":traffic-generator"],
+    env = {"BINARY": "$(rootpath :traffic-generator)"},
+    tags = [
+        "ci",
+        "no-sandbox",
+    ],
+    target_compatible_with = LINUX_ONLY,
+)
+
+# Test that packets are actually transmitted via net_null vdev.
+sh_test(
+    name = "tx_test",
+    size = "small",
+    srcs = ["test_tx.sh"],
+    data = [":traffic-generator"],
+    env = {"BINARY": "$(rootpath :traffic-generator)"},
+    tags = [
+        "ci",
+        "no-sandbox",
+    ],
+    target_compatible_with = LINUX_ONLY,
+)

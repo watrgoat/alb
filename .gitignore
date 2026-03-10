@@ -1,0 +1,4 @@
+/bazel-*
+MODULE.bazel.lock
+core
+hs_err_pid*.log
