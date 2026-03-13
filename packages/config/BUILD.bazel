@@ -1,0 +1,15 @@
+load("@dpdk//:cflags.bzl", "DPDK_COPTS")
+
+LINUX_ONLY = ["@platforms//os:linux"]
+
+cc_library(
+    name = "config",
+    srcs = ["src/config.c"],
+    hdrs = ["include/config.h"],
+    copts = DPDK_COPTS,
+    linkopts = ["-lyaml"],
+    strip_include_prefix = "include",
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
+    deps = ["@dpdk"],
+)

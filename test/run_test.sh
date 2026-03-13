@@ -6,7 +6,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-ALB_BIN="$PROJECT_DIR/build/alb"
+ALB_BIN="$PROJECT_DIR/bazel-bin/src/alb"
+CONFIG_FILE="$PROJECT_DIR/config/config.yaml"
 
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root (sudo)"
@@ -14,17 +15,9 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 if [ ! -f "$ALB_BIN" ]; then
-    echo "ALB binary not found. Building..."
-    make -C "$PROJECT_DIR/src"
+    echo "ALB binary not found. Building with bazel..."
+    bazel build //src:alb
 fi
-
-# Update config for test
-cat > "$PROJECT_DIR/config.yaml" << 'EOF'
-backends:
-  - ip: "192.168.1.100"
-    port: 8080
-    mac: "aa:bb:cc:dd:ee:ff"
-EOF
 
 echo "=== ALB Test with TAP Devices ==="
 echo ""
@@ -58,7 +51,7 @@ cd "$PROJECT_DIR"
     --vdev=net_tap0,iface=dtap0 \
     --vdev=net_tap1,iface=dtap1 \
     --no-telemetry \
-    -- "$PROJECT_DIR/config.yaml" "$LISTEN_PORT" \
+    -- "$CONFIG_FILE" "$LISTEN_PORT" \
     2>&1 &
 ALB_PID=$!
 
@@ -87,20 +80,17 @@ ip link show dtap0
 ip link show dtap1
 echo ""
 
-# Send test packets
+# Send test packets and verify round-robin
 echo "=== Sending Test Packets ==="
 python3 "$SCRIPT_DIR/send_udp.py" \
     --tx-iface dtap0 \
     --rx-iface dtap1 \
     --dst-ip 192.168.1.1 \
     --dst-port 5678 \
-    --count 5 \
-    --interval 0.5
+    --count 6 \
+    --interval 0.2 \
+    --verify-round-robin \
+    --expected-backends 192.168.1.100 192.168.1.101 192.168.1.102
 
 echo ""
 echo "=== Test Complete ==="
-echo ""
-echo "Expected behavior:"
-echo "  - Packets sent to dtap0 with dst_port=$LISTEN_PORT"
-echo "  - ALB filters for dst_port=$LISTEN_PORT, rewrites to backend config"
-echo "  - Rewritten packets appear on dtap1 with dst=192.168.1.100:8080"

@@ -9,10 +9,12 @@ cc_binary(
         "-O3",
         "-DALLOW_EXPERIMENTAL_API",
     ],
-    linkopts = ["-lyaml"],
     target_compatible_with = LINUX_ONLY,
     visibility = ["//visibility:public"],
-    deps = ["@dpdk"],
+    deps = [
+        "//packages/config",
+        "@dpdk",
+    ],
 )
 
 sh_test(
