@@ -4,7 +4,7 @@ LINUX_ONLY = ["@platforms//os:linux"]
 
 cc_binary(
     name = "alb",
-    srcs = ["main.c"],
+    srcs = ["main.cpp"],
     copts = DPDK_COPTS + [
         "-O3",
         "-DALLOW_EXPERIMENTAL_API",

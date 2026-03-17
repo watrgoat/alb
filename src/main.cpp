@@ -2,10 +2,10 @@
  * Copyright(c) 2010-2015 Intel Corporation
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <cinttypes>
 #include <rte_eal.h>
 #include <rte_ethdev.h>
 #include <rte_cycles.h>
@@ -15,7 +15,9 @@
 #include <rte_ip.h>
 #include <rte_udp.h>
 
+extern "C" {
 #include "config.h"
+}
 
 #define RX_RING_SIZE 1024
 #define TX_RING_SIZE 1024
@@ -29,7 +31,7 @@ static uint16_t listen_port;
 static uint16_t rr_index;
 
 static inline struct alb_backend *
-next_backend(void)
+next_backend()
 {
 	struct alb_backend *b = &config.backends[rr_index];
 	rr_index = (rr_index + 1) % config.num_backends;
@@ -109,14 +111,14 @@ port_init(uint16_t port, struct rte_mempool *mbuf_pool)
 }
 
 static __rte_noreturn void
-lcore_main(void)
+lcore_main()
 {
 	uint16_t port;
 
 	RTE_ETH_FOREACH_DEV(port)
 		if (rte_eth_dev_socket_id(port) >= 0 &&
 				rte_eth_dev_socket_id(port) !=
-						(int)rte_socket_id())
+						static_cast<int>(rte_socket_id()))
 			printf("WARNING, port %u is on remote NUMA node to "
 					"polling thread.\n\tPerformance will "
 					"not be optimal.\n", port);
@@ -145,7 +147,7 @@ lcore_main(void)
 				}
 
 				struct rte_ipv4_hdr *ip_hdr =
-					(struct rte_ipv4_hdr *)(eth_hdr + 1);
+					reinterpret_cast<struct rte_ipv4_hdr *>(eth_hdr + 1);
 
 				if (ip_hdr->next_proto_id != IPPROTO_UDP) {
 					rte_pktmbuf_free(m);
@@ -153,7 +155,8 @@ lcore_main(void)
 				}
 
 				struct rte_udp_hdr *udp_hdr =
-					(struct rte_udp_hdr *)((unsigned char *)ip_hdr +
+					reinterpret_cast<struct rte_udp_hdr *>(
+						reinterpret_cast<unsigned char *>(ip_hdr) +
 						(ip_hdr->version_ihl & 0x0F) * 4);
 
 				if (udp_hdr->dst_port != listen_port) {
@@ -205,7 +208,7 @@ main(int argc, char *argv[])
 		rte_exit(EXIT_FAILURE, "Usage: alb <config.yaml> <listen_port>\n");
 
 	const char *config_file = argv[1];
-	listen_port = htons((uint16_t)atoi(argv[2]));
+	listen_port = htons(static_cast<uint16_t>(atoi(argv[2])));
 
 	if (listen_port == 0)
 		rte_exit(EXIT_FAILURE, "Port must be non-zero\n");
@@ -229,7 +232,7 @@ main(int argc, char *argv[])
 
 	RTE_ETH_FOREACH_DEV(portid)
 		if (port_init(portid, mbuf_pool) != 0)
-			rte_exit(EXIT_FAILURE, "Cannot init port %"PRIu16 "\n",
+			rte_exit(EXIT_FAILURE, "Cannot init port %" PRIu16 "\n",
 					portid);
 
 	if (rte_lcore_count() > 1)
