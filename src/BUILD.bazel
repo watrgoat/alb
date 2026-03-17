@@ -1,0 +1,40 @@
+load("@dpdk//:cflags.bzl", "DPDK_COPTS")
+
+LINUX_ONLY = ["@platforms//os:linux"]
+
+cc_binary(
+    name = "alb",
+    srcs = ["main.c"],
+    copts = DPDK_COPTS + [
+        "-O3",
+        "-DALLOW_EXPERIMENTAL_API",
+    ],
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//packages/config",
+        "@dpdk",
+    ],
+)
+
+sh_test(
+    name = "alb_build_test",
+    srcs = ["test_build.sh"],
+    data = [":alb"],
+    env = {"BINARY": "$(rootpath :alb)"},
+    tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
+)
+
+sh_test(
+    name = "alb_eal_init_test",
+    size = "small",
+    srcs = ["test_eal_init.sh"],
+    data = [":alb"],
+    env = {"BINARY": "$(rootpath :alb)"},
+    tags = [
+        "ci",
+        "no-sandbox",
+    ],
+    target_compatible_with = LINUX_ONLY,
+)
