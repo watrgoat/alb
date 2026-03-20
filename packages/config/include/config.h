@@ -2,8 +2,8 @@
 #ifndef ALB_CONFIG_H
 #define ALB_CONFIG_H
 
-#include <stdint.h>
 #include <rte_ether.h>
+#include <stdint.h>
 
 #define ALB_MAX_BACKENDS 64
 

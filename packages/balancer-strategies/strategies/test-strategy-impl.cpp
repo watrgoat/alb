@@ -1,25 +1,31 @@
 #include "strategy.h"
 
-class RoundRobinBasic : public Strategy{
-    int current = 0;
-    ServerState* servers;
-    int count;
+class RoundRobinBasic : public Strategy
+{
+	int current = 0;
+	ServerState *servers;
+	int count;
 
-public:
-    RoundRobinBasic(ServerState* s, int n) : servers(s), count(n) {}
+      public:
+	RoundRobinBasic(ServerState *s, int n) : servers(s), count(n)
+	{
+	}
 
-    ServerState* select(const StrategyInput& s){
-        ServerState* picked = &servers[current];
-        current = (current + 1) % count; // not thread safe, but good enough for testing
-        return picked;
-    }
-
+	ServerState *select(const StrategyInput &s)
+	{
+		ServerState *picked = &servers[current];
+		current = (current + 1) %
+			  count; // not thread safe, but good enough for testing
+		return picked;
+	}
 };
 
-extern "C" Strategy* create_strategy(ServerState* servers, int count) {
-    return new RoundRobinBasic(servers, count);
+extern "C" Strategy *create_strategy(ServerState *servers, int count)
+{
+	return new RoundRobinBasic(servers, count);
 };
 
-extern "C" void destroy_strategy(Strategy* s) {
-    delete s;
+extern "C" void destroy_strategy(Strategy *s)
+{
+	delete s;
 };
