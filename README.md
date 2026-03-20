@@ -56,6 +56,13 @@ bazel-bin/packages/traffic-generator/traffic-generator --vdev=net_ring0 --vdev=n
 
 Requires at minimum 3 lcores: 1 for stats, 2..n-1 for TX, n for RX.
 
+## Precommit
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
 ## Project structure
 
 ```

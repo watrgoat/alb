@@ -1,3 +1,5 @@
+"""Repository rule for locating DPDK via pkg-config."""
+
 def _dpdk_repository_impl(repository_ctx):
     probe = repository_ctx.execute(["pkg-config", "--exists", "libdpdk"])
     if probe.return_code != 0:

@@ -6,8 +6,37 @@ on:
     branches: [main]
 
 jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format
+
+      - name: Check C/C++ formatting
+        run: |
+          find . -name '*.c' -o -name '*.h' -o -name '*.cc' -o -name '*.cpp' -o -name '*.hpp' | \
+            xargs clang-format --dry-run --Werror
+
+      - name: Install buildifier
+        run: |
+          curl -fsSL https://github.com/bazelbuild/buildtools/releases/download/v7.3.1/buildifier-linux-amd64 \
+            -o buildifier
+          chmod +x buildifier
+          sudo mv buildifier /usr/local/bin/buildifier
+
+      - name: Check Bazel formatting
+        run: buildifier -mode=check -lint=warn -r .
+
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          severity: warning
+
   build-and-test:
     runs-on: ubuntu-22.04
+    needs: lint
     steps:
       - uses: actions/checkout@v4
 
@@ -18,22 +47,8 @@ jobs:
           chmod +x bazel
           sudo mv bazel /usr/local/bin/bazel
 
-      - name: Install buildifier (pinned)
-        run: |
-          curl -fsSL https://github.com/bazelbuild/buildtools/releases/download/v7.3.1/buildifier-linux-amd64 \
-            -o buildifier
-          chmod +x buildifier
-          sudo mv buildifier /usr/local/bin/buildifier
-
       - name: Install DPDK and dependencies
         run: sudo apt-get update && sudo apt-get install -y dpdk-dev libnuma-dev
-
-      - name: Check Bazel formatting (warn-only for now)
-        run: |
-          if ! buildifier -mode=check -lint=warn -r .; then
-            echo "::warning::Bazel files need formatting. Run locally: buildifier -r ."
-            echo "::warning::Lint warnings are non-blocking for now; pre-commit enforcement will be added soon."
-          fi
 
       - name: Build all targets
         run: bazel build //...
