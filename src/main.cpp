@@ -2,8 +2,10 @@
  * Copyright(c) 2010-2015 Intel Corporation
  */
 
-#include <inttypes.h>
-#include <rte_cycles.h>
+#include <cinttypes>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <rte_eal.h>
 #include <rte_ethdev.h>
 #include <rte_ether.h>
@@ -15,7 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern "C" {
 #include "config.h"
+}
 
 #define RX_RING_SIZE 1024
 #define TX_RING_SIZE 1024
@@ -28,7 +32,7 @@ static struct alb_config config;
 static uint16_t listen_port;
 static uint16_t rr_index;
 
-static inline struct alb_backend *next_backend(void)
+static inline struct alb_backend *next_backend()
 {
 	struct alb_backend *b = &config.backends[rr_index];
 	rr_index = (rr_index + 1) % config.num_backends;
@@ -106,13 +110,13 @@ static inline int port_init(uint16_t port, struct rte_mempool *mbuf_pool)
 	return 0;
 }
 
-static __rte_noreturn void lcore_main(void)
+static __rte_noreturn void lcore_main()
 {
 	uint16_t port;
 
 	RTE_ETH_FOREACH_DEV(port)
 	if (rte_eth_dev_socket_id(port) >= 0 &&
-	    rte_eth_dev_socket_id(port) != (int)rte_socket_id())
+	    rte_eth_dev_socket_id(port) != static_cast<int>(rte_socket_id()))
 		printf("WARNING, port %u is on remote NUMA node to "
 		       "polling thread.\n\tPerformance will "
 		       "not be optimal.\n",
@@ -144,7 +148,8 @@ static __rte_noreturn void lcore_main(void)
 				}
 
 				struct rte_ipv4_hdr *ip_hdr =
-				    (struct rte_ipv4_hdr *)(eth_hdr + 1);
+				    reinterpret_cast<struct rte_ipv4_hdr *>(
+					eth_hdr + 1);
 
 				if (ip_hdr->next_proto_id != IPPROTO_UDP) {
 					rte_pktmbuf_free(m);
@@ -152,9 +157,10 @@ static __rte_noreturn void lcore_main(void)
 				}
 
 				struct rte_udp_hdr *udp_hdr =
-				    (struct rte_udp_hdr
-					 *)((unsigned char *)ip_hdr +
-					    (ip_hdr->version_ihl & 0x0F) * 4);
+				    reinterpret_cast<struct rte_udp_hdr *>(
+					reinterpret_cast<unsigned char *>(
+					    ip_hdr) +
+					(ip_hdr->version_ihl & 0x0F) * 4);
 
 				if (udp_hdr->dst_port != listen_port) {
 					rte_pktmbuf_free(m);
@@ -207,7 +213,7 @@ int main(int argc, char *argv[])
 			 "Usage: alb <config.yaml> <listen_port>\n");
 
 	const char *config_file = argv[1];
-	listen_port = htons((uint16_t)atoi(argv[2]));
+	listen_port = htons(static_cast<uint16_t>(atoi(argv[2])));
 
 	if (listen_port == 0)
 		rte_exit(EXIT_FAILURE, "Port must be non-zero\n");

@@ -1,3 +1,5 @@
 CompileFlags:
+  Compiler: clang++
   Add:
     - -Ipackages/config/include
+    - -Ipackages/balancer-strategies/include

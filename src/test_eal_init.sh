@@ -20,6 +20,7 @@ OUTPUT=$(timeout 4s stdbuf -oL "$BINARY" \
     -l 0 \
     --no-huge \
     --no-pci \
+    --no-telemetry \
     --vdev=net_null0 \
     --vdev=net_null1 \
     --file-prefix=alb_eal_init_test \
