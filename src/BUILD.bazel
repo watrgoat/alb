@@ -4,7 +4,11 @@ LINUX_ONLY = ["@platforms//os:linux"]
 
 cc_binary(
     name = "alb",
-    srcs = ["main.cpp"],
+    srcs = [
+        "main.cpp",
+        "strategy_loader.cpp",
+        "strategy_loader.hpp",
+    ],
     copts = DPDK_COPTS + [
         "-O3",
         "-DALLOW_EXPERIMENTAL_API",
@@ -25,6 +29,27 @@ sh_test(
     data = [":alb"],
     env = {"BINARY": "$(rootpath :alb)"},
     tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
+)
+
+sh_test(
+    name = "alb_strategy_reload_test",
+    size = "small",
+    srcs = ["test_strategy_reload.sh"],
+    data = [
+        ":alb",
+        "//packages/balancer-strategies:libteststrategy.so",
+        "//packages/balancer-strategies:libweightedstrategy.so",
+    ],
+    env = {
+        "BINARY": "$(rootpath :alb)",
+        "RR_LIB": "$(rootpath //packages/balancer-strategies:libteststrategy.so)",
+        "WEIGHTED_LIB": "$(rootpath //packages/balancer-strategies:libweightedstrategy.so)",
+    },
+    tags = [
+        "ci",
+        "no-sandbox",
+    ],
     target_compatible_with = LINUX_ONLY,
 )
 
