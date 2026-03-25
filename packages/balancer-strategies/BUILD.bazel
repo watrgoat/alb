@@ -2,7 +2,7 @@ LINUX_ONLY = ["@platforms//os:linux"]
 
 cc_library(
     name = "strategy",
-    hdrs = ["include/strategy.h"],
+    hdrs = ["include/strategy.hpp"],
     strip_include_prefix = "include",
     target_compatible_with = LINUX_ONLY,
     visibility = ["//visibility:public"],

@@ -9,9 +9,11 @@ cc_binary(
         "-O3",
         "-DALLOW_EXPERIMENTAL_API",
     ],
+    linkopts = ["-ldl"],
     target_compatible_with = LINUX_ONLY,
     visibility = ["//visibility:public"],
     deps = [
+        "//packages/balancer-strategies:strategy",
         "//packages/config",
         "@dpdk",
     ],

@@ -2,42 +2,54 @@
  * Copyright(c) 2010-2015 Intel Corporation
  */
 
+#include <atomic>
 #include <cinttypes>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <dlfcn.h>
+#include <poll.h>
+#include <sys/inotify.h>
+#include <unistd.h>
+
 #include <rte_eal.h>
 #include <rte_ethdev.h>
 #include <rte_ether.h>
 #include <rte_ip.h>
 #include <rte_lcore.h>
 #include <rte_mbuf.h>
+#include <rte_pause.h>
 #include <rte_udp.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
 extern "C" {
 #include "config.h"
 }
 
-#define RX_RING_SIZE 1024
-#define TX_RING_SIZE 1024
+#include "strategy.hpp"
 
+#define RX_RING_SIZE	1024
+#define TX_RING_SIZE	1024
 #define NUM_MBUFS	8191
 #define MBUF_CACHE_SIZE 250
 #define BURST_SIZE	32
 
 static struct alb_config config;
 static uint16_t listen_port;
-static uint16_t rr_index;
 
-static inline struct alb_backend *next_backend()
-{
-	struct alb_backend *b = &config.backends[rr_index];
-	rr_index = (rr_index + 1) % config.num_backends;
-	return b;
-}
+static ServerState server_states[ALB_MAX_BACKENDS];
+static int num_servers;
+
+struct StrategySlot {
+	void *dl_handle;
+	Strategy *(*create)(ServerState *, int);
+	void (*destroy)(Strategy *);
+	std::atomic<int32_t> in_flight{0};
+};
+
+static StrategySlot slots[2];
+static std::atomic<int> active_index{0};
+static std::atomic<bool> running{true};
 
 static inline int port_init(uint16_t port, struct rte_mempool *mbuf_pool)
 {
@@ -110,22 +122,89 @@ static inline int port_init(uint16_t port, struct rte_mempool *mbuf_pool)
 	return 0;
 }
 
-static __rte_noreturn void lcore_main()
+class RoundRobinStrategy : public Strategy
 {
-	uint16_t port;
+	ServerState *servers;
+	int count;
+	uint32_t idx{0};
 
-	RTE_ETH_FOREACH_DEV(port)
-	if (rte_eth_dev_socket_id(port) >= 0 &&
-	    rte_eth_dev_socket_id(port) != static_cast<int>(rte_socket_id()))
-		printf("WARNING, port %u is on remote NUMA node to "
-		       "polling thread.\n\tPerformance will "
-		       "not be optimal.\n",
-		       port);
+      public:
+	RoundRobinStrategy(ServerState *s, int n) : servers(s), count(n)
+	{
+	}
+	ServerState *select(const StrategyInput &) override
+	{
+		ServerState *s = &servers[idx];
+		idx = (idx + 1) % static_cast<uint32_t>(count);
+		return s;
+	}
+};
 
-	printf("\nCore %u forwarding packets. [Ctrl+C to quit]\n",
-	       rte_lcore_id());
+static Strategy *rr_create(ServerState *servers, int count)
+{
+	return new RoundRobinStrategy(servers, count);
+}
 
-	for (;;) {
+static void rr_destroy(Strategy *s)
+{
+	delete s;
+}
+
+static void load_fallback_slot(StrategySlot *slot)
+{
+	slot->dl_handle = nullptr;
+	slot->create = rr_create;
+	slot->destroy = rr_destroy;
+	slot->in_flight.store(0, std::memory_order_relaxed);
+}
+
+static bool load_into_slot(StrategySlot *slot, const char *path)
+{
+	void *h = dlopen(path, RTLD_NOW);
+	if (!h) {
+		printf("dlopen failed: %s\n", dlerror());
+		return false;
+	}
+
+	auto cr =
+	    (Strategy * (*)(ServerState *, int)) dlsym(h, "create_strategy");
+	auto de = (void (*)(Strategy *))dlsym(h, "destroy_strategy");
+
+	if (!cr || !de) {
+		printf("dlsym failed: %s\n", dlerror());
+		dlclose(h);
+		return false;
+	}
+
+	slot->dl_handle = h;
+	slot->create = cr;
+	slot->destroy = de;
+	slot->in_flight.store(0, std::memory_order_relaxed);
+	return true;
+}
+
+static int worker_main(__rte_unused void *arg)
+{
+	int my_index = -1;
+	Strategy *strat = nullptr;
+	uint32_t pkt_seq = 0;
+
+	while (running.load(std::memory_order_relaxed)) {
+		int idx = active_index.load(std::memory_order_acquire);
+
+		if (idx != my_index) {
+			if (strat && my_index >= 0) {
+				slots[my_index].destroy(strat);
+				slots[my_index].in_flight.fetch_sub(
+				    1, std::memory_order_release);
+			}
+			slots[idx].in_flight.fetch_add(
+			    1, std::memory_order_acq_rel);
+			strat = slots[idx].create(server_states, num_servers);
+			my_index = idx;
+		}
+
+		uint16_t port;
 		RTE_ETH_FOREACH_DEV(port)
 		{
 			struct rte_mbuf *bufs[BURST_SIZE];
@@ -167,11 +246,16 @@ static __rte_noreturn void lcore_main()
 					continue;
 				}
 
-				struct alb_backend *backend = next_backend();
-				rte_ether_addr_copy(&backend->mac,
-						    &eth_hdr->dst_addr);
-				ip_hdr->dst_addr = backend->ip;
-				udp_hdr->dst_port = backend->port;
+				StrategyInput input = {ip_hdr->src_addr ^
+							   ip_hdr->dst_addr,
+						       pkt_seq++};
+				ServerState *ss = strat->select(input);
+				int bidx = static_cast<int>(ss - server_states);
+
+				memcpy(eth_hdr->dst_addr.addr_bytes, &ss->mac,
+				       6);
+				ip_hdr->dst_addr = ss->address;
+				udp_hdr->dst_port = config.backends[bidx].port;
 
 				ip_hdr->hdr_checksum = 0;
 				ip_hdr->hdr_checksum = rte_ipv4_cksum(ip_hdr);
@@ -185,7 +269,6 @@ static __rte_noreturn void lcore_main()
 
 			const uint16_t nb_tx =
 			    rte_eth_tx_burst(port ^ 1, 0, bufs, nb_to_tx);
-
 			if (unlikely(nb_tx < nb_to_tx)) {
 				for (uint16_t buf = nb_tx; buf < nb_to_tx;
 				     buf++)
@@ -193,6 +276,66 @@ static __rte_noreturn void lcore_main()
 			}
 		}
 	}
+
+	if (strat && my_index >= 0) {
+		slots[my_index].destroy(strat);
+		slots[my_index].in_flight.fetch_sub(1,
+						    std::memory_order_release);
+	}
+
+	return 0;
+}
+
+static int manager_main(__rte_unused void *arg)
+{
+	int ifd = inotify_init1(IN_NONBLOCK);
+	inotify_add_watch(ifd, "./strategies/", IN_CLOSE_WRITE | IN_MOVED_TO);
+
+	struct pollfd pfd = {.fd = ifd, .events = POLLIN, .revents = 0};
+
+	while (running.load(std::memory_order_relaxed)) {
+		if (poll(&pfd, 1, 500) <= 0)
+			continue;
+
+		char buf[4096];
+		int len = read(ifd, buf, sizeof(buf));
+
+		bool found = false;
+		for (char *ptr = buf; ptr < buf + len;) {
+			auto *ev = (struct inotify_event *)ptr;
+			if (ev->len > 0 &&
+			    strcmp(ev->name, "libstrategy.so") == 0)
+				found = true;
+			ptr += sizeof(struct inotify_event) + ev->len;
+		}
+
+		if (!found)
+			continue;
+
+		printf("new strategy detected, reloading...\n");
+
+		int old_idx = active_index.load(std::memory_order_acquire);
+		int new_idx = old_idx ^ 1;
+
+		if (!load_into_slot(&slots[new_idx],
+				    "./strategies/libstrategy.so"))
+			continue;
+
+		active_index.store(new_idx, std::memory_order_release);
+
+		while (slots[old_idx].in_flight.load(
+			   std::memory_order_acquire) > 0)
+			rte_pause();
+
+		if (slots[old_idx].dl_handle)
+			dlclose(slots[old_idx].dl_handle);
+		slots[old_idx].dl_handle = nullptr;
+
+		printf("reload complete\n");
+	}
+
+	close(ifd);
+	return 0;
 }
 
 int main(int argc, char *argv[])
@@ -226,6 +369,16 @@ int main(int argc, char *argv[])
 
 	alb_config_print(&config);
 
+	num_servers = config.num_backends;
+	for (int i = 0; i < num_servers; i++) {
+		server_states[i].address = config.backends[i].ip;
+		server_states[i].mac = 0;
+		memcpy(&server_states[i].mac, config.backends[i].mac.addr_bytes,
+		       6);
+		server_states[i].active_connections = 0;
+		server_states[i].weight = 1;
+	}
+
 	nb_ports = rte_eth_dev_count_avail();
 	if (nb_ports < 2 || (nb_ports & 1))
 		rte_exit(EXIT_FAILURE, "Error: number of ports must be even\n");
@@ -233,7 +386,6 @@ int main(int argc, char *argv[])
 	mbuf_pool = rte_pktmbuf_pool_create(
 	    "MBUF_POOL", NUM_MBUFS * nb_ports, MBUF_CACHE_SIZE, 0,
 	    RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
-
 	if (mbuf_pool == NULL)
 		rte_exit(EXIT_FAILURE, "Cannot create mbuf pool\n");
 
@@ -242,13 +394,28 @@ int main(int argc, char *argv[])
 		rte_exit(EXIT_FAILURE, "Cannot init port %" PRIu16 "\n",
 			 portid);
 
-	if (rte_lcore_count() > 1)
-		printf("\nWARNING: Too many lcores enabled. Only 1 used.\n");
+	if (!load_into_slot(&slots[0], "./strategies/libstrategy.so")) {
+		printf("no strategy .so found, using built-in round-robin\n");
+		load_fallback_slot(&slots[0]);
+	}
 
-	rr_index = 0;
-	lcore_main();
+	active_index.store(0, std::memory_order_relaxed);
+
+	unsigned lcore_id;
+	unsigned manager_lcore = RTE_MAX_LCORE;
+
+	RTE_LCORE_FOREACH_WORKER(lcore_id)
+	{
+		if (manager_lcore == RTE_MAX_LCORE) {
+			manager_lcore = lcore_id;
+			rte_eal_remote_launch(manager_main, nullptr, lcore_id);
+		} else {
+			rte_eal_remote_launch(worker_main, nullptr, lcore_id);
+		}
+	}
+
+	rte_eal_mp_wait_lcore();
 
 	rte_eal_cleanup();
-
 	return 0;
 }

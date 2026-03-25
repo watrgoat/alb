@@ -1,4 +1,4 @@
-#include "strategy.h"
+#include "strategy.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <dlfcn.h>
