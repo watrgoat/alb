@@ -1,0 +1,3 @@
+#!/bin/bash
+set -e
+RR_LIB="$RR_LIB" WEIGHTED_LIB="$WEIGHTED_LIB" "$SWAP_TEST_MAIN"

@@ -2,7 +2,7 @@ LINUX_ONLY = ["@platforms//os:linux"]
 
 cc_library(
     name = "strategy",
-    hdrs = ["include/strategy.h"],
+    hdrs = ["include/strategy.hpp"],
     strip_include_prefix = "include",
     target_compatible_with = LINUX_ONLY,
     visibility = ["//visibility:public"],
@@ -13,6 +13,16 @@ cc_binary(
     srcs = ["strategies/test-strategy-impl.cpp"],
     linkshared = True,
     target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
+    deps = [":strategy"],
+)
+
+cc_binary(
+    name = "libweightedstrategy.so",
+    srcs = ["strategies/weighted-strategy-impl.cpp"],
+    linkshared = True,
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
     deps = [":strategy"],
 )
 
@@ -23,6 +33,35 @@ cc_binary(
     linkopts = ["-ldl"],
     target_compatible_with = LINUX_ONLY,
     deps = [":strategy"],
+)
+
+cc_binary(
+    name = "swap_test_main",
+    srcs = ["test/swap_test.cpp"],
+    data = [
+        ":libteststrategy.so",
+        ":libweightedstrategy.so",
+    ],
+    linkopts = ["-ldl"],
+    target_compatible_with = LINUX_ONLY,
+    deps = [":strategy"],
+)
+
+sh_test(
+    name = "swap_test",
+    srcs = ["test/run_swap_test.sh"],
+    data = [
+        ":libteststrategy.so",
+        ":libweightedstrategy.so",
+        ":swap_test_main",
+    ],
+    env = {
+        "SWAP_TEST_MAIN": "$(rootpath :swap_test_main)",
+        "RR_LIB": "$(rootpath :libteststrategy.so)",
+        "WEIGHTED_LIB": "$(rootpath :libweightedstrategy.so)",
+    },
+    tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
 )
 
 sh_test(

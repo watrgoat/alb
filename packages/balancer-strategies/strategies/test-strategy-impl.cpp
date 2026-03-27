@@ -1,4 +1,4 @@
-#include "strategy.h"
+#include "strategy.hpp"
 
 class RoundRobinBasic : public Strategy
 {
