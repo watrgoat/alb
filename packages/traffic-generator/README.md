@@ -1,7 +1,17 @@
-### Running commands
+# traffic-generator
 
-`make`
+DPDK-based UDP packet generator for load testing. Uses multiple TX queues across cores with a dedicated stats core and RX drain core.
 
-``` ./build/packet-forwarder --vdev=net_ring0 --vdev=net_ring0 -l 0,1,2```
+## Build
 
-Requires at minimum 3 lcores: 1 -> stats, 2..n-1 -> tx, n -> rx)
+```bash
+bazel build //packages/traffic-generator:traffic-generator
+```
+
+## Run
+
+```bash
+./build/packet-forwarder --vdev=net_ring0 -l 0,1,2
+```
+
+Requires minimum 3 lcores: main (stats), workers 1..n-1 (TX), worker n (RX drain).
