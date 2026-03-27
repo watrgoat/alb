@@ -13,3 +13,12 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = ["@dpdk"],
 )
+
+cc_test(
+    name = "config_test",
+    srcs = ["test/config_test.c"],
+    copts = DPDK_COPTS,
+    tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
+    deps = [":config"],
+)

@@ -76,6 +76,11 @@ int alb_config_load(const char *filename, struct alb_config *config)
 						parse_mac(
 						    value,
 						    &current_backend->mac);
+					} else if (strcmp(current_key,
+							  "weight") == 0) {
+						int w = atoi(value);
+						current_backend->weight =
+						    w > 0 ? (uint32_t)w : 1;
 					}
 					expect_value = 0;
 				} else {
@@ -91,6 +96,7 @@ int alb_config_load(const char *filename, struct alb_config *config)
 			if (config->num_backends < ALB_MAX_BACKENDS) {
 				current_backend =
 				    &config->backends[config->num_backends];
+				current_backend->weight = 1;
 				in_backend_item = 1;
 			}
 		} else if (event.type == YAML_MAPPING_END_EVENT &&
@@ -115,12 +121,12 @@ void alb_config_print(const struct alb_config *config)
 	for (uint16_t i = 0; i < config->num_backends; i++) {
 		const struct alb_backend *b = &config->backends[i];
 		printf("  [%u] IP=%u.%u.%u.%u port=%u "
-		       "MAC=%02x:%02x:%02x:%02x:%02x:%02x\n",
+		       "MAC=%02x:%02x:%02x:%02x:%02x:%02x weight=%u\n",
 		       i, (b->ip) & 0xFF, (b->ip >> 8) & 0xFF,
 		       (b->ip >> 16) & 0xFF, (b->ip >> 24) & 0xFF,
 		       ntohs(b->port), b->mac.addr_bytes[0],
 		       b->mac.addr_bytes[1], b->mac.addr_bytes[2],
 		       b->mac.addr_bytes[3], b->mac.addr_bytes[4],
-		       b->mac.addr_bytes[5]);
+		       b->mac.addr_bytes[5], b->weight);
 	}
 }
