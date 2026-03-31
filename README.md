@@ -27,6 +27,7 @@ Requires 3+ lcores: main (stats), workers (TX), last worker (RX drain).
 
 | Test | Description |
 |------|-------------|
+| `config_test` | Parses YAML configs, verifies IP/port/mac/weight parsing |
 | `strategy_test` | Loads strategy via dlopen, verifies round-robin routing |
 | `traffic-generator_build_test` | Verifies DPDK linkage |
 | `eal_init_test` | DPDK EAL init with virtual device |

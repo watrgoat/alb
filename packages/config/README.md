@@ -19,6 +19,7 @@ backends:
   - ip: 192.168.1.10
     port: 8080
     mac: aa:bb:cc:dd:ee:ff
+    weight: 3  # optional, defaults to 1
 ```
 
 ## Build

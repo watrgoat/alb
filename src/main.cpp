@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 		memcpy(&server_states[i].mac, config.backends[i].mac.addr_bytes,
 		       6);
 		server_states[i].active_connections = 0;
-		server_states[i].weight = 1;
+		server_states[i].weight = config.backends[i].weight;
 	}
 
 	nb_ports = rte_eth_dev_count_avail();

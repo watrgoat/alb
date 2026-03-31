@@ -11,6 +11,7 @@ struct alb_backend {
 	uint32_t ip;
 	uint16_t port;
 	struct rte_ether_addr mac;
+	uint32_t weight;
 };
 
 struct alb_config {
