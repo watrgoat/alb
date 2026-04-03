@@ -1,18 +1,24 @@
 # balancer-strategies
 
-Pluggable load balancing strategy interface. Strategies are compiled as shared libraries and can be hot-swapped at runtime via `dlopen`.
+Pluggable load balancing strategy interface. Strategies are shared libraries hot-swapped at runtime via `dlopen`.
 
-## Build Strategy
+## Available Strategies
+
+| Strategy | Description |
+|----------|-------------|
+| `libteststrategy.so` | Round-robin (cycles through servers) |
+| `libweightedstrategy.so` | Weighted (distributes by server weight) |
+
+## Build
 
 ```bash
-g++ -shared -fPIC -o build/libteststrategy.so strategies/test-strategy-impl.cpp -I include
+bazel build //packages/balancer-strategies:libweightedstrategy.so
 ```
 
-## Build & Run Tests
+## Test
 
 ```bash
-g++ -o build/test_main test/main.cpp -I include -ldl
-./build/test_main
+bazel test //packages/balancer-strategies:strategy_test
 ```
 
 ## Implement a Strategy

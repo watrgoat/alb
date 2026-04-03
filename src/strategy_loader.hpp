@@ -4,18 +4,18 @@
 #include <cstdint>
 
 #include "strategy.hpp"
+#include "table.hpp"
 
 #define BURST_SIZE 32
 
-struct StrategySlot {
-	void *dl_handle;
+struct StrategySlotData {
 	Strategy *(*create)(ServerState *, int);
 	void (*destroy)(Strategy *);
-	std::atomic<int32_t> in_flight{0};
 };
 
-extern StrategySlot slots[2];
-extern std::atomic<int> active_index;
+using StrategySlot = Slot<StrategySlotData>;
+
+extern HotSwapTable<StrategySlotData> strategy_table;
 extern std::atomic<bool> running;
 extern ServerState server_states[];
 extern int num_servers;

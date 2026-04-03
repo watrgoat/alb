@@ -23,8 +23,7 @@ extern "C" {
 extern struct alb_config config;
 extern uint16_t listen_port;
 
-StrategySlot slots[2];
-std::atomic<int> active_index{0};
+HotSwapTable<StrategySlotData> strategy_table;
 std::atomic<bool> running{true};
 ServerState server_states[ALB_MAX_BACKENDS];
 int num_servers;
@@ -47,6 +46,8 @@ class RoundRobinStrategy : public Strategy
 	}
 };
 
+static StrategySlotData fallback_data;
+
 static Strategy *rr_create(ServerState *servers, int count)
 {
 	return new RoundRobinStrategy(servers, count);
@@ -59,9 +60,10 @@ static void rr_destroy(Strategy *s)
 
 void load_fallback_slot(StrategySlot *slot)
 {
+	fallback_data.create = rr_create;
+	fallback_data.destroy = rr_destroy;
+	slot->data = &fallback_data;
 	slot->dl_handle = nullptr;
-	slot->create = rr_create;
-	slot->destroy = rr_destroy;
 	slot->in_flight.store(0, std::memory_order_relaxed);
 }
 
@@ -83,31 +85,36 @@ bool load_into_slot(StrategySlot *slot, const char *path)
 		return false;
 	}
 
+	static StrategySlotData loaded_data[2];
+	size_t idx = &strategy_table.slots[0] == slot ? 0 : 1;
+	loaded_data[idx].create = cr;
+	loaded_data[idx].destroy = de;
+
+	slot->data = &loaded_data[idx];
 	slot->dl_handle = h;
-	slot->create = cr;
-	slot->destroy = de;
 	slot->in_flight.store(0, std::memory_order_relaxed);
 	return true;
 }
 
 int worker_main(__rte_unused void *arg)
 {
-	int my_index = -1;
+	size_t my_index = SIZE_MAX;
 	Strategy *strat = nullptr;
 	uint32_t pkt_seq = 0;
 
 	while (running.load(std::memory_order_relaxed)) {
-		int idx = active_index.load(std::memory_order_acquire);
+		size_t idx =
+		    strategy_table.active_index.load(std::memory_order_acquire);
 
 		if (idx != my_index) {
-			if (strat && my_index >= 0) {
-				slots[my_index].destroy(strat);
-				slots[my_index].in_flight.fetch_sub(
-				    1, std::memory_order_release);
+			if (strat && my_index != SIZE_MAX) {
+				strategy_table.slots[my_index].data->destroy(
+				    strat);
+				strategy_table.slots[my_index].release();
 			}
-			slots[idx].in_flight.fetch_add(
-			    1, std::memory_order_acq_rel);
-			strat = slots[idx].create(server_states, num_servers);
+			strategy_table.slots[idx].acquire();
+			strat = strategy_table.slots[idx].data->create(
+			    server_states, num_servers);
 			my_index = idx;
 		}
 
@@ -184,10 +191,9 @@ int worker_main(__rte_unused void *arg)
 		}
 	}
 
-	if (strat && my_index >= 0) {
-		slots[my_index].destroy(strat);
-		slots[my_index].in_flight.fetch_sub(1,
-						    std::memory_order_release);
+	if (strat && my_index != SIZE_MAX) {
+		strategy_table.slots[my_index].data->destroy(strat);
+		strategy_table.slots[my_index].release();
 	}
 
 	return 0;
@@ -221,22 +227,20 @@ int manager_main(__rte_unused void *arg)
 
 		printf("new strategy detected, reloading...\n");
 
-		int old_idx = active_index.load(std::memory_order_acquire);
-		int new_idx = old_idx ^ 1;
+		StrategySlot &new_slot = strategy_table.inactive();
 
-		if (!load_into_slot(&slots[new_idx],
-				    "./strategies/libstrategy.so"))
+		if (!load_into_slot(&new_slot, "./strategies/libstrategy.so"))
 			continue;
 
-		active_index.store(new_idx, std::memory_order_release);
+		StrategySlot &old_slot = strategy_table.active();
+		strategy_table.swap();
 
-		while (slots[old_idx].in_flight.load(
-			   std::memory_order_acquire) > 0)
+		while (!old_slot.idle())
 			rte_pause();
 
-		if (slots[old_idx].dl_handle)
-			dlclose(slots[old_idx].dl_handle);
-		slots[old_idx].dl_handle = nullptr;
+		if (old_slot.dl_handle)
+			dlclose(old_slot.dl_handle);
+		old_slot.dl_handle = nullptr;
 
 		printf("reload complete\n");
 	}

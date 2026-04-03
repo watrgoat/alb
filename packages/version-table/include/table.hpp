@@ -1,30 +1,64 @@
-#include <atomic>
-
 #pragma once
 
-struct SharedSlot {
-	std::atomic<uint64_t> version; // monotonic version counter
-	std::atomic<int32_t> refcount; // how many processes are mid-call
-	std::atomic<bool> active;      // still loadable or marked for cleanup
-	char dll_path[256];	       // or symbol name, whatever you need
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
+
+// single process hot-swap slot with reference counting
+// uses in_flight to track active users before unloading
+template <typename T> struct Slot {
+	T *data = nullptr;
+	void *dl_handle = nullptr;
+	std::atomic<int32_t> in_flight{0};
+
+	void acquire()
+	{
+		in_flight.fetch_add(1, std::memory_order_acq_rel);
+	} // bump refcount
+	void release()
+	{
+		in_flight.fetch_sub(1, std::memory_order_release);
+	} // drop refcount
+	bool idle() const
+	{
+		return in_flight.load(std::memory_order_acquire) ==
+		       0; // check if drainable
+	}
 };
 
-struct VersionTable {
-	std::atomic<uint32_t> latest_index; // points to the latest slot
+// two slot table for hot swapping: one active, one for loading new version
+// use: load into inactive slot, swap active_index, wait for old to drain
+template <typename T, size_t N = 2> struct HotSwapTable {
+	Slot<T> slots[N];
+	std::atomic<size_t> active_index{0};
+
+	Slot<T> &active()
+	{
+		return slots[active_index.load(std::memory_order_acquire)];
+	}
+	Slot<T> &inactive()
+	{
+		return slots[active_index.load(std::memory_order_acquire) ^ 1];
+	}
+
+	void swap()
+	{
+		size_t old = active_index.load(std::memory_order_acquire);
+		active_index.store(old ^ 1, std::memory_order_release);
+	}
+};
+
+// cross-process shared memory slot (for future)
+// stores path instead of pointers since pointers aren't shareable across
+// processes
+struct SharedSlot {
+	std::atomic<uint64_t> version;
+	std::atomic<int32_t> refcount;
+	std::atomic<bool> active;
+	char dll_path[256];
+};
+
+struct SharedVersionTable {
+	std::atomic<uint32_t> latest_index;
 	SharedSlot slots[8];
 };
-
-// The read path for any process:
-
-// Atomic load current_index
-// Bump refcount on that slot
-// Look up the function pointer locally (each process keeps its own dlopen
-// handle / GetProcAddress result cached per version) Call the function
-// Decrement refcount
-
-// The write path (whoever publishes a new DLL version):
-
-// Find a free slot (refcount 0, not current)
-// Fill in the dll path / version
-// Atomic store to current_index
-// Mark old slots with refcount 0 as reclaimable
