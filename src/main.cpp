@@ -155,12 +155,13 @@ int main(int argc, char *argv[])
 		rte_exit(EXIT_FAILURE, "Cannot init port %" PRIu16 "\n",
 			 portid);
 
-	if (!load_into_slot(&slots[0], "./strategies/libstrategy.so")) {
+	if (!load_into_slot(&strategy_table.slots[0],
+			    "./strategies/libstrategy.so")) {
 		printf("no strategy .so found, using built-in round-robin\n");
-		load_fallback_slot(&slots[0]);
+		load_fallback_slot(&strategy_table.slots[0]);
 	}
 
-	active_index.store(0, std::memory_order_relaxed);
+	strategy_table.active_index.store(0, std::memory_order_relaxed);
 
 	unsigned lcore_id;
 	unsigned manager_lcore = RTE_MAX_LCORE;
