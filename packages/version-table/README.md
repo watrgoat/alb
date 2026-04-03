@@ -2,6 +2,12 @@
 
 Lock-free versioning table for hot-swapping shared libraries across processes. Uses atomic operations and reference counting to safely update function pointers without blocking readers.
 
+## Build
+
+```bash
+bazel build //packages/version-table:version-table
+```
+
 ## Usage
 
 ```cpp
