@@ -1,10 +1,11 @@
 #pragma once
 
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 
-// Single-process hot-swap slot with reference counting.
-// Use in_flight to track active users before unloading.
+// single process hot-swap slot with reference counting
+// uses in_flight to track active users before unloading
 template <typename T> struct Slot {
 	T *data = nullptr;
 	void *dl_handle = nullptr;
@@ -13,19 +14,20 @@ template <typename T> struct Slot {
 	void acquire()
 	{
 		in_flight.fetch_add(1, std::memory_order_acq_rel);
-	}
+	} // bump refcount
 	void release()
 	{
 		in_flight.fetch_sub(1, std::memory_order_release);
-	}
+	} // drop refcount
 	bool idle() const
 	{
-		return in_flight.load(std::memory_order_acquire) == 0;
+		return in_flight.load(std::memory_order_acquire) ==
+		       0; // check if drainable
 	}
 };
 
-// Two-slot table for hot-swapping: one active, one for loading new version.
-// Pattern: load into inactive slot, swap active_index, wait for old to drain.
+// two slot table for hot swapping: one active, one for loading new version
+// use: load into inactive slot, swap active_index, wait for old to drain
 template <typename T, size_t N = 2> struct HotSwapTable {
 	Slot<T> slots[N];
 	std::atomic<size_t> active_index{0};
@@ -46,9 +48,9 @@ template <typename T, size_t N = 2> struct HotSwapTable {
 	}
 };
 
-// Cross-process shared memory slot (for future use).
-// Stores path instead of pointers since pointers aren't shareable across
-// processes.
+// cross-process shared memory slot (for future)
+// stores path instead of pointers since pointers aren't shareable across
+// processes
 struct SharedSlot {
 	std::atomic<uint64_t> version;
 	std::atomic<int32_t> refcount;
