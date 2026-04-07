@@ -1,3 +1,6 @@
 load("//third_party:dpdk.bzl", "dpdk_repository")
+load("//third_party:libbpf.bzl", "libbpf_repository")
 
 dpdk_repository(name = "dpdk")
+
+libbpf_repository(name = "libbpf")
