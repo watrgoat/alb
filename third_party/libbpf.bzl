@@ -16,6 +16,18 @@ def _libbpf_repository_impl(repository_ctx):
         if probe.return_code != 0:
             fail("{dep} not found. Install with: sudo apt-get install -y libelf-dev zlib1g-dev".format(dep = dep))
 
+    # Check for bpftool (needed by consumers for skeleton generation)
+    if not repository_ctx.which("bpftool"):
+        fail("bpftool not found. Install with: sudo apt-get install -y bpftool")
+
+    # Detect multiarch include path for kernel headers
+    result = repository_ctx.execute(["dpkg-architecture", "-qDEB_HOST_MULTIARCH"])
+    if result.return_code == 0:
+        multiarch = result.stdout.strip()
+    else:
+        result = repository_ctx.execute(["gcc", "-dumpmachine"])
+        multiarch = result.stdout.strip() if result.return_code == 0 else "x86_64-linux-gnu"
+
     # Build libbpf
     result = repository_ctx.execute(
         ["make", "-C", "src", "-j", "BUILD_STATIC_ONLY=1", "OBJDIR=build"],
@@ -24,6 +36,16 @@ def _libbpf_repository_impl(repository_ctx):
     if result.return_code != 0:
         fail("libbpf build failed:\n" + result.stdout + "\n" + result.stderr)
 
+    # Create bpf/ include directory with symlinks so #include <bpf/libbpf.h> works
+    for hdr in repository_ctx.path("src").readdir():
+        if str(hdr).endswith(".h"):
+            repository_ctx.symlink(hdr, "include/bpf/" + hdr.basename)
+
+    # Export detected system include path for BPF compilation
+    repository_ctx.file("defs.bzl", content = (
+        'SYSTEM_INCLUDE = "/usr/include/{multiarch}"\n'
+    ).format(multiarch = multiarch))
+
     # Generate BUILD file
     repository_ctx.file("BUILD.bazel", content = """
 package(default_visibility = ["//visibility:public"])
@@ -31,15 +53,19 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "libbpf",
     srcs = ["src/build/libbpf.a"],
-    hdrs = glob(["src/*.h"]),
-    includes = ["src"],
+    hdrs = glob(["include/bpf/*.h"]),
+    includes = ["include"],
     linkopts = ["-lelf", "-lz"],
+)
+
+filegroup(
+    name = "bpf_headers",
+    srcs = glob(["include/bpf/*.h"]),
 )
 """)
 
-    # Export copts (empty since we use includes)
-    repository_ctx.file("cflags.bzl", content = "LIBBPF_COPTS = []\n")
-
 libbpf_repository = repository_rule(
     implementation = _libbpf_repository_impl,
+    local = True,
+    environ = ["PKG_CONFIG_PATH", "PATH"],
 )
