@@ -3,6 +3,7 @@
 #include <linux/bpf.h>
 #include <linux/if_ether.h>
 #include <linux/ip.h>
+#include <linux/types.h> // IWYU pragma: keep
 #include <linux/types.h>
 
 #define FILTER_RATE 1

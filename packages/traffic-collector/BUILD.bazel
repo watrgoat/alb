@@ -10,6 +10,7 @@ genrule(
     cmd = """
         FIRST_HDR=$$(echo '$(locations @libbpf//:bpf_headers)' | cut -d' ' -f1) && \
         clang -g -O2 -target bpf \
+            -I/usr/include \
             -I{system_include} \
             -I$$(dirname $$FIRST_HDR)/.. \
             -c $(location traffic-collector.bpf.c) \
