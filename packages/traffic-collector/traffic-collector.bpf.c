@@ -3,15 +3,22 @@
 #include <linux/bpf.h>
 #include <linux/if_ether.h>
 #include <linux/ip.h>
+#include <linux/types.h>
 
 #define FILTER_RATE 1
 
 typedef unsigned int u32;
 typedef int pid_t;
 const pid_t pid_filter = 0;
-unsigned int count = 0;
 
 char LICENSE[] SEC("license") = "Dual BSD/GPL";
+
+struct {
+	__uint(type, BPF_MAP_TYPE_HASH);
+	__uint(max_entries, 1024);
+	__type(key, __u32);
+	__type(value, __u64);
+} counts SEC(".maps");
 
 SEC("xdp")
 int xdp_prog_simple(struct xdp_md *ctx)
@@ -26,11 +33,18 @@ int xdp_prog_simple(struct xdp_md *ctx)
 	if ((void *)(ip + 1) > data_end)
 		return XDP_DROP;
 
-	count++;
+	__u32 key = ip->daddr;
 
-	if (count % FILTER_RATE == 0) {
-		bpf_printk("packet from %x to %x\n", ip->saddr, ip->daddr);
+	__u64 *val = bpf_map_lookup_elem(&counts, &key);
+
+	if (val) {
+		__sync_fetch_and_add(val, 1);
+	} else {
+		__u64 init = 1;
+		bpf_map_update_elem(&counts, &key, &init, BPF_NOEXIST);
 	}
+
+	// bpf_printk("packet from %x to %x\n", ip->saddr, ip->daddr);
 
 	return XDP_PASS;
 }
