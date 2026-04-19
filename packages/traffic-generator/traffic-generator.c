@@ -18,7 +18,7 @@
 #define RX_RING_SIZE 1024
 #define TX_RING_SIZE 1024
 
-#define NUM_MBUFS	65535
+#define NUM_MBUFS	8191
 #define MBUF_CACHE_SIZE 250
 #define BURST_SIZE	64
 
@@ -167,6 +167,14 @@ static int lcore_tx(void *arg)
 	if (rte_pktmbuf_alloc_bulk(mbuf_pool, bufs, BURST_SIZE) != 0)
 		rte_exit(EXIT_FAILURE, "Failed to allocate packet buffers\n");
 
+	// Each pre-built packet gets a distinct UDP src_port so the ALB's RSS
+	// hash spreads this TX worker's bursts across all RX queues. Without
+	// this, every packet shares one 5-tuple and RSS collapses all traffic
+	// to a single ALB worker (capping throughput at ~1 Mpps).
+	// Offset by queue * BURST_SIZE so workers don't overlap each other's
+	// port range — gives BURST_SIZE * nb_tx_workers distinct tuples total.
+	uint16_t src_port_base = SRC_PORT + queue * BURST_SIZE;
+
 	for (int i = 0; i < BURST_SIZE; i++) {
 		struct rte_mbuf *pkt = bufs[i];
 
@@ -195,7 +203,7 @@ static int lcore_tx(void *arg)
 		ip->dst_addr = rte_cpu_to_be_32(DST_ADDR);
 		ip->hdr_checksum = rte_ipv4_cksum(ip);
 
-		udp->src_port = rte_cpu_to_be_16(SRC_PORT);
+		udp->src_port = rte_cpu_to_be_16(src_port_base + i);
 		udp->dst_port = rte_cpu_to_be_16(DST_PORT);
 		udp->dgram_len =
 		    rte_cpu_to_be_16(sizeof(struct rte_udp_hdr) + payload_len);

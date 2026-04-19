@@ -54,9 +54,9 @@ mkdir -p "$OUTDIR"
 echo "Results: $OUTDIR"
 
 # --- hugepages ------------------------------------------------------------
-if [ "$(cat /proc/sys/vm/nr_hugepages 2>/dev/null || echo 0)" -lt 512 ]; then
-    echo "Reserving 512 x 2M hugepages..."
-    echo 512 > /proc/sys/vm/nr_hugepages
+if [ "$(cat /proc/sys/vm/nr_hugepages 2>/dev/null || echo 0)" -lt 1024 ]; then
+    echo "Reserving 1024 x 2M hugepages..."
+    echo 1024 > /proc/sys/vm/nr_hugepages
 fi
 
 # --- bind P1/P2/P3 to vfio-pci, keep P4 on kernel -------------------------

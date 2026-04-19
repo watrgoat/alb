@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include <csignal>
+#include <ctime>
 #include <unistd.h>
 
 #include <rte_eal.h>
@@ -23,7 +24,7 @@ extern "C" {
 
 #include "strategy_loader.hpp"
 
-#define RX_RING_SIZE	1024
+#define RX_RING_SIZE	4096
 #define TX_RING_SIZE	1024
 #define NUM_MBUFS	8191
 #define MBUF_CACHE_SIZE 250
@@ -138,10 +139,11 @@ int main(int argc, char *argv[])
 
 	if (argc < 3)
 		rte_exit(EXIT_FAILURE,
-			 "Usage: alb <config.yaml> <listen_port>\n");
+			 "Usage: alb <config.yaml> <listen_port> [stats_csv]\n");
 
 	const char *config_file = argv[1];
 	listen_port = htons(static_cast<uint16_t>(atoi(argv[2])));
+	const char *stats_csv_path = (argc >= 4) ? argv[3] : nullptr;
 
 	if (listen_port == 0)
 		rte_exit(EXIT_FAILURE, "Port must be non-zero\n");
@@ -249,8 +251,23 @@ int main(int argc, char *argv[])
 	for (uint16_t p = 0; p < rte_eth_dev_count_avail(); p++)
 		rte_eth_stats_get(p, &prev[p]);
 
+	FILE *stats_csv = nullptr;
+	if (stats_csv_path) {
+		stats_csv = fopen(stats_csv_path, "w");
+		if (!stats_csv) {
+			fprintf(stderr, "Failed to open %s for stats CSV\n",
+				stats_csv_path);
+		} else {
+			fprintf(stats_csv,
+				"timestamp,port,rx_pps,tx_pps,imissed,ierrors\n");
+			fflush(stats_csv);
+			printf("ALB stats CSV: %s\n", stats_csv_path);
+		}
+	}
+
 	while (running.load(std::memory_order_relaxed)) {
 		sleep(1);
+		long now = static_cast<long>(time(nullptr));
 		for (uint16_t p = 0; p < rte_eth_dev_count_avail(); p++) {
 			struct rte_eth_stats cur;
 			if (rte_eth_stats_get(p, &cur) != 0)
@@ -279,9 +296,19 @@ int main(int argc, char *argv[])
 				printf("]");
 			}
 			printf("\n");
+			if (stats_csv) {
+				fprintf(stats_csv,
+					"%ld,%u,%" PRIu64 ",%" PRIu64 ",%" PRIu64
+					",%" PRIu64 "\n",
+					now, p, rx, tx, imiss, ierr);
+				fflush(stats_csv);
+			}
 			prev[p] = cur;
 		}
 	}
+
+	if (stats_csv)
+		fclose(stats_csv);
 
 	rte_eal_mp_wait_lcore();
 
