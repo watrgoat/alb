@@ -20,7 +20,7 @@
 
 #define NUM_MBUFS	65535
 #define MBUF_CACHE_SIZE 250
-#define BURST_SIZE	32
+#define BURST_SIZE	64
 
 #define DST_ADDR RTE_IPV4(192, 168, 1, 1)
 #define SRC_ADDR RTE_IPV4(192, 168, 1, 2)
@@ -195,15 +195,15 @@ static int lcore_tx(void *arg)
 		ip->dst_addr = rte_cpu_to_be_32(DST_ADDR);
 		ip->hdr_checksum = rte_ipv4_cksum(ip);
 
-		// Vary src_port across the burst so the receiver's RSS hash
-		// distributes packets across multiple RX queues.
-		udp->src_port = rte_cpu_to_be_16(SRC_PORT + i);
+		udp->src_port = rte_cpu_to_be_16(SRC_PORT);
 		udp->dst_port = rte_cpu_to_be_16(DST_PORT);
 		udp->dgram_len =
 		    rte_cpu_to_be_16(sizeof(struct rte_udp_hdr) + payload_len);
 
-		// reference count must stay at 1 so the driver doesn't free it
-		rte_mbuf_refcnt_set(pkt, 1);
+		// Pin refcount so the NIC's TX-complete path never frees our
+		// pre-built packets. Lets the hot loop skip atomic refcount
+		// updates per burst.
+		rte_mbuf_refcnt_set(pkt, UINT16_MAX);
 	}
 
 	printf("\nCore %u transmitting packets. [Ctrl+C to quit]\n",
@@ -211,28 +211,18 @@ static int lcore_tx(void *arg)
 
 	/* Main work of application loop. 8< */
 	while (running) {
-		/*
-		 * Send packets on the transmit buffer
-		 */
-
-		// bump refcount before each burst so the driver doesn't free
-		// the mbufs
-		for (int i = 0; i < BURST_SIZE; i++)
-			rte_mbuf_refcnt_update(bufs[i], 1);
-
 		uint16_t nb_tx =
 		    rte_eth_tx_burst(port, queue, bufs, BURST_SIZE);
 		tx_counts[rte_lcore_id()] += nb_tx;
-
-		// refcount back down for any that weren't sent
-		for (int i = nb_tx; i < BURST_SIZE; i++)
-			rte_mbuf_refcnt_update(bufs[i], -1);
 	}
 	/* >8 End of loop. */
 
-	// release preallocated mbufs
-	for (int i = 0; i < BURST_SIZE; i++)
+	// refcount was pinned to UINT16_MAX; drop it back so free() actually
+	// returns the mbufs to the pool.
+	for (int i = 0; i < BURST_SIZE; i++) {
+		rte_mbuf_refcnt_set(bufs[i], 1);
 		rte_pktmbuf_free(bufs[i]);
+	}
 
 	return 0;
 }

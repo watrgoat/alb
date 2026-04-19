@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Join tx-stats.csv (input) and traffic-stats.csv (output) on timestamp and plot.
+"""Plot ALB input/output throughput and per-backend distribution.
 
 Usage:
     python3 test/plot_metrics.py <results_dir>
 
 Expects:
     <results_dir>/tx-stats.csv        columns: timestamp,pps_tx
-    <results_dir>/traffic-stats.csv   columns: timestamp,ip,packets_delta
+    <results_dir>/traffic-stats.csv   columns: timestamp,ip,pps
 
-Writes:
-    <results_dir>/metrics.png (and prints summary to stdout)
+Writes three figures to <results_dir>/:
+    throughput.png      input (gen TX) vs output (ALB RX total), in Mpps
+    per-backend.png     per-backend Mpps over time (absolute)
+    backend-share.png   per-backend share of total RX (%), for adaptivity
 """
 
 from __future__ import annotations
@@ -18,6 +20,8 @@ import csv
 import sys
 from collections import defaultdict
 from pathlib import Path
+
+PPS_TO_MPPS = 1e-6
 
 
 def read_tx(path: Path) -> dict[int, int]:
@@ -30,7 +34,7 @@ def read_tx(path: Path) -> dict[int, int]:
 
 
 def read_rx(path: Path) -> tuple[dict[int, int], dict[str, dict[int, int]]]:
-    """Return (totals_by_ts, per_ip[ip][ts])."""
+    """Return (totals_by_ts, per_ip[ip][ts]) in pps."""
     totals: dict[int, int] = defaultdict(int)
     per_ip: dict[str, dict[int, int]] = defaultdict(lambda: defaultdict(int))
     with path.open() as f:
@@ -38,9 +42,9 @@ def read_rx(path: Path) -> tuple[dict[int, int], dict[str, dict[int, int]]]:
         for row in reader:
             ts = int(row["timestamp"])
             ip = row["ip"]
-            delta = int(row["packets_delta"])
-            totals[ts] += delta
-            per_ip[ip][ts] += delta
+            pps = int(row["pps"])
+            totals[ts] += pps
+            per_ip[ip][ts] += pps
     return dict(totals), {k: dict(v) for k, v in per_ip.items()}
 
 
@@ -63,24 +67,12 @@ def main() -> int:
     tx = read_tx(tx_path)
     rx_total, rx_per_ip = read_rx(rx_path)
 
-    # Trim TX samples to the collector's observation window: anything before
-    # the first RX sample or after the last is a post-shutdown artifact
-    # (e.g. the generator briefly unthrottled after ALB died).
+    # Trim TX to the collector's observation window; anything outside is a
+    # post-shutdown artifact.
     if rx_total:
-        t_start = min(rx_total)
-        t_end = max(rx_total)
+        t_start, t_end = min(rx_total), max(rx_total)
         tx = {ts: v for ts, v in tx.items() if t_start <= ts <= t_end}
 
-    # Normalise RX to pps. traffic-collector samples every 5s and records the
-    # total delta across that interval; divide to get per-second rate.
-    SAMPLE_INTERVAL_SEC = 5
-    rx_total_pps = {ts: v / SAMPLE_INTERVAL_SEC for ts, v in rx_total.items()}
-    rx_per_ip_pps = {
-        ip: {ts: v / SAMPLE_INTERVAL_SEC for ts, v in series.items()}
-        for ip, series in rx_per_ip.items()
-    }
-
-    # Summary
     tx_total = sum(tx.values())
     rx_total_pkts = sum(rx_total.values())
     loss = (1 - rx_total_pkts / tx_total) if tx_total else 0.0
@@ -105,45 +97,91 @@ def main() -> int:
 
     t0 = min(list(tx.keys()) + list(rx_total.keys()))
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    def rel(ts_iterable):
+        return [t - t0 for t in ts_iterable]
 
+    # Union of all sample timestamps, for the per-backend share plot below.
+    all_ts = sorted(set(rx_total.keys()))
+
+    # --- 1. Throughput: input vs output -----------------------------------
+    fig, ax = plt.subplots(figsize=(10, 4.5))
     tx_xs = sorted(tx.keys())
     ax.plot(
-        [t - t0 for t in tx_xs],
-        [tx[t] for t in tx_xs],
-        label="input (gen TX pps)",
+        rel(tx_xs),
+        [tx[t] * PPS_TO_MPPS for t in tx_xs],
+        label="input (gen TX)",
         linewidth=2,
     )
-
-    rx_xs = sorted(rx_total_pps.keys())
+    rx_xs = sorted(rx_total.keys())
     ax.plot(
-        [t - t0 for t in rx_xs],
-        [rx_total_pps[t] for t in rx_xs],
-        label="output (XDP RX pps, total)",
+        rel(rx_xs),
+        [rx_total[t] * PPS_TO_MPPS for t in rx_xs],
+        label="output (ALB RX total)",
         linewidth=2,
     )
+    ax.set_xlabel("seconds since start")
+    ax.set_ylabel("throughput (Mpps)")
+    ax.set_title(f"ALB throughput — {results_dir.name}  (loss {loss:.2%})")
+    ax.grid(True, alpha=0.3)
+    ax.set_ylim(bottom=0)
+    ax.legend(loc="best")
+    fig.tight_layout()
+    out1 = results_dir / "throughput.png"
+    fig.savefig(out1, dpi=120)
+    plt.close(fig)
 
-    for ip in sorted(rx_per_ip_pps):
-        series = rx_per_ip_pps[ip]
+    # --- 2. Per-backend absolute Mpps -------------------------------------
+    fig, ax = plt.subplots(figsize=(10, 4.5))
+    for ip in sorted(rx_per_ip):
+        series = rx_per_ip[ip]
         xs = sorted(series.keys())
         ax.plot(
-            [t - t0 for t in xs],
-            [series[t] for t in xs],
-            label=f"output (XDP RX pps, {ip})",
-            linestyle="--",
-            alpha=0.7,
+            rel(xs),
+            [series[t] * PPS_TO_MPPS for t in xs],
+            label=ip,
+            linewidth=1.8,
         )
-
     ax.set_xlabel("seconds since start")
-    ax.set_ylabel("packets / second")
-    ax.set_title(f"ALB throughput: {results_dir.name}")
+    ax.set_ylabel("per-backend throughput (Mpps)")
+    ax.set_title(f"Per-backend RX — {results_dir.name}")
     ax.grid(True, alpha=0.3)
-    ax.legend(loc="best")
-
-    out = results_dir / "metrics.png"
+    ax.set_ylim(bottom=0)
+    ax.legend(loc="best", title="backend IP")
     fig.tight_layout()
-    fig.savefig(out, dpi=120)
-    print(f"\nWrote {out}")
+    out2 = results_dir / "per-backend.png"
+    fig.savefig(out2, dpi=120)
+    plt.close(fig)
+
+    # --- 3. Per-backend share of total (for adaptivity) -------------------
+    # Shows the fraction of traffic going to each backend per second. When
+    # the ALB adapts (e.g. one backend gets throttled), its share drops
+    # while the others rise — easier to spot than absolute pps.
+    fig, ax = plt.subplots(figsize=(10, 4.5))
+    for ip in sorted(rx_per_ip):
+        series = rx_per_ip[ip]
+        xs = []
+        ys = []
+        for t in all_ts:
+            total = rx_total.get(t, 0)
+            if total <= 0:
+                continue
+            xs.append(t - t0)
+            ys.append(100.0 * series.get(t, 0) / total)
+        ax.plot(xs, ys, label=ip, linewidth=1.8)
+    ax.set_xlabel("seconds since start")
+    ax.set_ylabel("share of total RX (%)")
+    ax.set_title(f"Per-backend share — {results_dir.name}")
+    ax.grid(True, alpha=0.3)
+    ax.set_ylim(0, 100)
+    ax.legend(loc="best", title="backend IP")
+    fig.tight_layout()
+    out3 = results_dir / "backend-share.png"
+    fig.savefig(out3, dpi=120)
+    plt.close(fig)
+
+    print(f"\nWrote {out1}")
+    print(f"Wrote {out2}")
+    print(f"Wrote {out3}")
     return 0
 
 

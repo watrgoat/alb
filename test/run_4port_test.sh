@@ -119,8 +119,9 @@ fi
 # DPDK port index 0 = first -a arg = P2, port 1 = P3. ALB's worker TXes on
 # (port ^ 1), so ingress P2 -> egress P3 and vice versa.
 echo "Starting ALB on $PCI_P2 (ingress) + $PCI_P3 (egress)..."
-# lcore 0 = main (stats), 1 = manager (strategy hot-reload watcher),
-# 2..5 = forwarding workers, one per RX/TX queue (RSS across queues).
+# Pin ALB to distinct physical cores (0..5 on this 8-core+HT box):
+#   0 = main (stats), 1 = manager (hot-reload watcher),
+#   2..5 = 4 forwarding workers, one per RX/TX queue (RSS across queues).
 "$ALB_BIN" -l 0,1,2,3,4,5 \
     -a "$PCI_P2" -a "$PCI_P3" \
     --file-prefix=alb \
@@ -136,8 +137,20 @@ fi
 
 # --- start traffic generator on P1 ---------------------------------------
 echo "Starting traffic-generator on $PCI_P1..."
-# Disjoint from ALB lcores (0..5). Generator: main + N TX + 1 RX-drain.
-"$GEN_BIN" -l 6,7,8,9 \
+# Generator needs more than one TX worker to push past ~1.4 Mpps. Layout:
+#   lcore 6  -> main/stats       (phys 6)
+#   lcore 7  -> TX worker        (phys 7, dedicated)
+#   lcore 8  -> TX worker        (HT sibling of phys 0, shares with ALB main
+#                                 which only wakes ~1/s for stats)
+#   lcore 9  -> TX worker        (HT sibling of phys 1, shares with ALB
+#                                 manager which is blocked on epoll)
+#   lcore 14 -> TX worker        (HT sibling of phys 6, shares with gen's
+#                                 own main which sleeps 1s/s)
+#   lcore 15 -> RX drain         (HT sibling of phys 7, shares with TX
+#                                 worker on 7; drain is cheap, acceptable)
+# ALB workers on phys cores 2..5 and their HT siblings (10..13) are
+# deliberately left alone so ALB forwarding isn't starved.
+"$GEN_BIN" -l 6,7,8,9,14,15 \
     -a "$PCI_P1" \
     --file-prefix=gen \
     -- "$OUTDIR/tx-stats.csv" \

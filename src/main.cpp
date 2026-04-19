@@ -185,8 +185,17 @@ int main(int argc, char *argv[])
 	printf("Launching %u forwarding worker(s) with %u RX/TX queues per port\n",
 	       num_fwd_workers, num_fwd_workers);
 
+	// Size the pool to comfortably cover RX+TX descriptors per queue across
+	// all ports, plus per-lcore mbuf cache and burst headroom. Undersizing
+	// starves RX DMA and shows up as `imissed`.
+	uint32_t pool_size =
+	    nb_ports * num_fwd_workers *
+	    (RX_RING_SIZE + TX_RING_SIZE + MBUF_CACHE_SIZE + 1024);
+	if (pool_size < NUM_MBUFS * nb_ports)
+		pool_size = NUM_MBUFS * nb_ports;
+	printf("mbuf pool size: %u\n", pool_size);
 	mbuf_pool = rte_pktmbuf_pool_create(
-	    "MBUF_POOL", NUM_MBUFS * nb_ports, MBUF_CACHE_SIZE, 0,
+	    "MBUF_POOL", pool_size, MBUF_CACHE_SIZE, 0,
 	    RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
 	if (mbuf_pool == NULL)
 		rte_exit(EXIT_FAILURE, "Cannot create mbuf pool\n");
@@ -235,8 +244,7 @@ int main(int argc, char *argv[])
 	signal(SIGTERM, sig_handler);
 
 	// Main-thread stats loop: every second, print per-port ipackets/opackets
-	// deltas so we can see where traffic is (or isn't) flowing. Exits when
-	// running=false and all workers have stopped.
+	// deltas, plus per-RX-queue distribution so uneven RSS is visible.
 	struct rte_eth_stats prev[RTE_MAX_ETHPORTS] = {};
 	for (uint16_t p = 0; p < rte_eth_dev_count_avail(); p++)
 		rte_eth_stats_get(p, &prev[p]);
@@ -252,9 +260,25 @@ int main(int argc, char *argv[])
 			uint64_t imiss = cur.imissed - prev[p].imissed;
 			uint64_t ierr = cur.ierrors - prev[p].ierrors;
 			printf("port %u  rx %" PRIu64 " pps  tx %" PRIu64
-			       " pps  imissed %" PRIu64 "  ierrors %" PRIu64
-			       "\n",
+			       " pps  imissed %" PRIu64 "  ierrors %" PRIu64,
 			       p, rx, tx, imiss, ierr);
+			// per-queue RX breakdown (only interesting on the
+			// ingress port — RSS-spread queues; TX queues are
+			// 1:1 with workers so they mirror tx counter).
+			if (rx > 0) {
+				printf("  [");
+				for (uint16_t q = 0;
+				     q < num_fwd_workers &&
+				     q < RTE_ETHDEV_QUEUE_STAT_CNTRS;
+				     q++) {
+					uint64_t qrx = cur.q_ipackets[q] -
+						       prev[p].q_ipackets[q];
+					printf("%s%" PRIu64, q ? "," : "",
+					       qrx);
+				}
+				printf("]");
+			}
+			printf("\n");
 			prev[p] = cur;
 		}
 	}
