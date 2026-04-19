@@ -1,0 +1,41 @@
+load("@libbpf//:defs.bzl", "SYSTEM_INCLUDE")
+
+genrule(
+    name = "bpf_object",
+    srcs = [
+        "traffic-collector.bpf.c",
+        "@libbpf//:bpf_headers",
+    ],
+    outs = ["traffic-collector.bpf.o"],
+    cmd = """
+        FIRST_HDR=$$(echo '$(locations @libbpf//:bpf_headers)' | cut -d' ' -f1) && \
+        clang -g -O2 -target bpf \
+            -I/usr/include \
+            -I{system_include} \
+            -I$$(dirname $$FIRST_HDR)/.. \
+            -c $(location traffic-collector.bpf.c) \
+            -o $@
+    """.format(system_include = SYSTEM_INCLUDE),
+)
+
+genrule(
+    name = "bpf_skeleton",
+    srcs = [":bpf_object"],
+    outs = ["traffic-collector.skel.hpp"],
+    cmd = "bpftool gen skeleton $< name traffic_collector_bpf > $@",
+)
+
+cc_library(
+    name = "bpf_skel",
+    hdrs = [":bpf_skeleton"],
+    includes = ["."],
+)
+
+cc_binary(
+    name = "traffic-collector",
+    srcs = ["traffic-collector.cpp"],
+    deps = [
+        ":bpf_skel",
+        "@libbpf",
+    ],
+)

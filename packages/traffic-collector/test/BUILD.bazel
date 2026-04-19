@@ -1,0 +1,5 @@
+cc_binary(
+    name = "test_libbpf",
+    srcs = ["test_libbpf.c"],
+    deps = ["@libbpf"],
+)
