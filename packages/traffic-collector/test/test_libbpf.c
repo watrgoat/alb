@@ -1,5 +1,5 @@
 // test_libbpf.c
-#include <libbpf.h>
+#include <bpf/libbpf.h>
 #include <stdio.h>
 
 int main()

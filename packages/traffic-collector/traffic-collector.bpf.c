@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause) */
+#include <linux/types.h> // IWYU pragma: keep
 #include <bpf/bpf_helpers.h>
 #include <linux/bpf.h>
 #include <linux/if_ether.h>
 #include <linux/ip.h>
-#include <linux/types.h> // IWYU pragma: keep
 
 #define FILTER_RATE 1
 
