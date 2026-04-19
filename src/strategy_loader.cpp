@@ -96,8 +96,10 @@ bool load_into_slot(StrategySlot *slot, const char *path)
 	return true;
 }
 
-int worker_main(__rte_unused void *arg)
+int worker_main(void *arg)
 {
+	const uint16_t queue_id =
+	    static_cast<uint16_t>(reinterpret_cast<uintptr_t>(arg));
 	size_t my_index = SIZE_MAX;
 	Strategy *strat = nullptr;
 	uint32_t pkt_seq = 0;
@@ -123,7 +125,7 @@ int worker_main(__rte_unused void *arg)
 		{
 			struct rte_mbuf *bufs[BURST_SIZE];
 			const uint16_t nb_rx =
-			    rte_eth_rx_burst(port, 0, bufs, BURST_SIZE);
+			    rte_eth_rx_burst(port, queue_id, bufs, BURST_SIZE);
 
 			if (unlikely(nb_rx == 0))
 				continue;
@@ -181,8 +183,8 @@ int worker_main(__rte_unused void *arg)
 			if (nb_to_tx == 0)
 				continue;
 
-			const uint16_t nb_tx =
-			    rte_eth_tx_burst(port ^ 1, 0, bufs, nb_to_tx);
+			const uint16_t nb_tx = rte_eth_tx_burst(
+			    port ^ 1, queue_id, bufs, nb_to_tx);
 			if (unlikely(nb_tx < nb_to_tx)) {
 				for (uint16_t buf = nb_tx; buf < nb_to_tx;
 				     buf++)

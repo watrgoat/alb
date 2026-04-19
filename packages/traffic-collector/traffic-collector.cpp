@@ -12,7 +12,7 @@
 #include "traffic-collector.skel.hpp"
 
 #define MAX_ENTRIES	    1024
-#define SAMPLE_INTERVAL_SEC 5
+#define SAMPLE_INTERVAL_SEC 1
 
 static volatile bool running = true;
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Failed to open traffic-stats.csv\n");
 		goto cleanup;
 	}
-	fprintf(csv, "timestamp,ip,packets_delta\n");
+	fprintf(csv, "timestamp,ip,pps\n");
 
 	printf("Collecting traffic stats to traffic-stats.csv every %ds...\n",
 	       SAMPLE_INTERVAL_SEC);
@@ -119,11 +119,12 @@ int main(int argc, char *argv[])
 			if (delta == 0)
 				continue;
 
+			__u64 pps = delta / SAMPLE_INTERVAL_SEC;
 			char ip_str[INET_ADDRSTRLEN];
 			inet_ntop(AF_INET, &cur_keys[i], ip_str,
 				  sizeof(ip_str));
 			fprintf(csv, "%ld,%s,%llu\n", now, ip_str,
-				(unsigned long long)delta);
+				(unsigned long long)pps);
 		}
 		fflush(csv);
 
