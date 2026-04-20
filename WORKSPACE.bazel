@@ -1,6 +1,9 @@
 load("//third_party:dpdk.bzl", "dpdk_repository")
+load("//third_party:libbpf.bzl", "libbpf_repository")
 load("//third_party:llama_cpp.bzl", "llama_cpp_repository")
 
 dpdk_repository(name = "dpdk")
+
+libbpf_repository(name = "libbpf")
 
 llama_cpp_repository(name = "llama_cpp")

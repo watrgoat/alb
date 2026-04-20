@@ -8,16 +8,19 @@
 #include <rte_ethdev.h>
 #include <rte_lcore.h>
 #include <rte_mbuf.h>
+#include <signal.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <time.h>
 
 #define RX_RING_SIZE 1024
 #define TX_RING_SIZE 1024
 
-#define NUM_MBUFS	65535
+#define NUM_MBUFS	8191
 #define MBUF_CACHE_SIZE 250
-#define BURST_SIZE	32
+#define BURST_SIZE	64
 
 #define DST_ADDR RTE_IPV4(192, 168, 1, 1)
 #define SRC_ADDR RTE_IPV4(192, 168, 1, 2)
@@ -27,6 +30,14 @@
 #define PAYLOAD_SIZE 32
 
 static volatile uint64_t tx_counts[RTE_MAX_LCORE];
+static const char *csv_path;
+static volatile int running = 1;
+
+static void sig_handler(int sig)
+{
+	(void)sig;
+	running = 0;
+}
 
 struct lcore_args {
 	struct rte_mempool *mbuf_pool;
@@ -156,6 +167,14 @@ static int lcore_tx(void *arg)
 	if (rte_pktmbuf_alloc_bulk(mbuf_pool, bufs, BURST_SIZE) != 0)
 		rte_exit(EXIT_FAILURE, "Failed to allocate packet buffers\n");
 
+	// Each pre-built packet gets a distinct UDP src_port so the ALB's RSS
+	// hash spreads this TX worker's bursts across all RX queues. Without
+	// this, every packet shares one 5-tuple and RSS collapses all traffic
+	// to a single ALB worker (capping throughput at ~1 Mpps).
+	// Offset by queue * BURST_SIZE so workers don't overlap each other's
+	// port range — gives BURST_SIZE * nb_tx_workers distinct tuples total.
+	uint16_t src_port_base = SRC_PORT + queue * BURST_SIZE;
+
 	for (int i = 0; i < BURST_SIZE; i++) {
 		struct rte_mbuf *pkt = bufs[i];
 
@@ -184,38 +203,34 @@ static int lcore_tx(void *arg)
 		ip->dst_addr = rte_cpu_to_be_32(DST_ADDR);
 		ip->hdr_checksum = rte_ipv4_cksum(ip);
 
-		udp->src_port = rte_cpu_to_be_16(SRC_PORT);
+		udp->src_port = rte_cpu_to_be_16(src_port_base + i);
 		udp->dst_port = rte_cpu_to_be_16(DST_PORT);
 		udp->dgram_len =
 		    rte_cpu_to_be_16(sizeof(struct rte_udp_hdr) + payload_len);
 
-		// reference count must stay at 1 so the driver doesn't free it
-		rte_mbuf_refcnt_set(pkt, 1);
+		// Pin refcount so the NIC's TX-complete path never frees our
+		// pre-built packets. Lets the hot loop skip atomic refcount
+		// updates per burst.
+		rte_mbuf_refcnt_set(pkt, UINT16_MAX);
 	}
 
 	printf("\nCore %u transmitting packets. [Ctrl+C to quit]\n",
 	       rte_lcore_id());
 
 	/* Main work of application loop. 8< */
-	for (;;) {
-		/*
-		 * Send packets on the transmit buffer
-		 */
-
-		// bump refcount before each burst so the driver doesn't free
-		// the mbufs
-		for (int i = 0; i < BURST_SIZE; i++)
-			rte_mbuf_refcnt_update(bufs[i], 1);
-
+	while (running) {
 		uint16_t nb_tx =
 		    rte_eth_tx_burst(port, queue, bufs, BURST_SIZE);
 		tx_counts[rte_lcore_id()] += nb_tx;
-
-		// refcount back down for any that weren't sent
-		for (int i = nb_tx; i < BURST_SIZE; i++)
-			rte_mbuf_refcnt_update(bufs[i], -1);
 	}
 	/* >8 End of loop. */
+
+	// refcount was pinned to UINT16_MAX; drop it back so free() actually
+	// returns the mbufs to the pool.
+	for (int i = 0; i < BURST_SIZE; i++) {
+		rte_mbuf_refcnt_set(bufs[i], 1);
+		rte_pktmbuf_free(bufs[i]);
+	}
 
 	return 0;
 }
@@ -225,7 +240,7 @@ static int lcore_rx(void *arg)
 	struct rte_mbuf *bufs[BURST_SIZE];
 	uint16_t port = 0;
 
-	for (;;) {
+	while (running) {
 		uint16_t nb_rx = rte_eth_rx_burst(port, 0, bufs, BURST_SIZE);
 		for (int i = 0; i < nb_rx; i++)
 			rte_pktmbuf_free(bufs[i]);
@@ -234,12 +249,26 @@ static int lcore_rx(void *arg)
 }
 /* >8 End Basic forwarding application lcore. */
 
-static __rte_noreturn void lcore_main(void)
+static void lcore_main(void)
 {
 	uint64_t last = 0;
+	FILE *csv = NULL;
 
-	for (;;) {
+	if (csv_path) {
+		csv = fopen(csv_path, "w");
+		if (!csv) {
+			fprintf(stderr, "Failed to open %s for TX CSV\n",
+				csv_path);
+		} else {
+			fprintf(csv, "timestamp,pps_tx\n");
+			fflush(csv);
+		}
+	}
+
+	while (running) {
 		rte_delay_us_sleep(1000000); // 1 second
+		if (!running)
+			break;
 
 		uint64_t current = 0;
 		unsigned id;
@@ -249,7 +278,16 @@ static __rte_noreturn void lcore_main(void)
 		uint64_t pps = current - last;
 		last = current;
 		printf("TX: %" PRIu64 " pps  (%.2f Mpps)\n", pps, pps / 1e6);
+
+		if (csv) {
+			fprintf(csv, "%ld,%" PRIu64 "\n", (long)time(NULL),
+				pps);
+			fflush(csv);
+		}
 	}
+
+	if (csv)
+		fclose(csv);
 }
 /*
  * The main function, which does initialization and calls the per-lcore
@@ -270,8 +308,19 @@ int main(int argc, char *argv[])
 
 	uint16_t nb_tx_lcores = rte_lcore_count() - 2;
 
+	// Unbuffered stdout so log output survives SIGINT.
+	setvbuf(stdout, NULL, _IONBF, 0);
+	signal(SIGINT, sig_handler);
+	signal(SIGTERM, sig_handler);
+
 	argc -= ret;
 	argv += ret;
+
+	// Optional first post-EAL arg: CSV path for per-second TX pps
+	if (argc >= 2) {
+		csv_path = argv[1];
+		printf("TX stats CSV: %s\n", csv_path);
+	}
 
 	/* Check that there is an even number of ports to send/receive on. */
 	nb_ports = rte_eth_dev_count_avail();
@@ -317,8 +366,11 @@ int main(int argc, char *argv[])
 	// rx drain
 	rte_eal_remote_launch(lcore_rx, NULL, lcores[nb_lcores - 1]);
 
-	// main core - stats
+	// main core - stats (returns when SIGINT/SIGTERM flips `running`)
 	lcore_main();
+
+	// wait for workers to observe !running and return
+	rte_eal_mp_wait_lcore();
 
 	/* clean up the EAL */
 	rte_eal_cleanup();

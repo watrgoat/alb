@@ -2,3 +2,5 @@
 MODULE.bazel.lock
 core
 hs_err_pid*.log
+*.skel.hpp
+traffic-stats.csv

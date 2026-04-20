@@ -8,5 +8,6 @@ refresh_compile_commands(
         "//packages/config:config": "",
         "//packages/balancer-strategies:strategy": "",
         "//packages/traffic-generator:traffic-generator": "",
+        "//packages/traffic-collector/test:test_libbpf": "",
     },
 )
