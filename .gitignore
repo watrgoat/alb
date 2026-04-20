@@ -1,4 +1,6 @@
 /bazel-*
+# Llama 3.1 8B GGUF weights (see scripts/download_llama_model.sh)
+models/*.gguf
 MODULE.bazel.lock
 core
 hs_err_pid*.log

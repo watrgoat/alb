@@ -14,6 +14,12 @@ LLAMA_CPP_TAG="${LLAMA_CPP_TAG:-b8748}"
 LLAMA_CPP_REPO="https://github.com/ggml-org/llama.cpp.git"
 BUILD_DIR="$(mktemp -d)"
 
+if ! command -v cmake >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1 || ! command -v g++ >/dev/null 2>&1; then
+	echo "error: need cmake, git, and g++ on PATH." >&2
+	echo "On Ubuntu: sudo apt-get install -y cmake git build-essential" >&2
+	exit 1
+fi
+
 cleanup() { rm -rf "$BUILD_DIR"; }
 trap cleanup EXIT
 
@@ -50,5 +56,5 @@ EOF
 
 echo "==> Done. Verify with: pkg-config --exists llama && echo ok"
 echo ""
-echo "Model: meta-llama/Llama-3.1-8B-Instruct (GGUF)"
+echo "Model: Llama 3.1 8B Instruct (GGUF, not in git): ./scripts/download_llama_model.sh"
 echo "  https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct"
