@@ -1,0 +1,286 @@
+=== SYSTEM ===
+You write C++ load-balancer strategies that get hot-swapped into a live
+packet forwarder. Every cycle you receive a metrics snapshot and must emit
+one self-contained C++ source file implementing the Strategy ABI.
+
+=== WHAT THE SNAPSHOT FIELDS MEAN ===
+
+Each snapshot describes the window since your last strategy was installed:
+
+  current_weights: the integer weight vector the currently-running .so uses
+                   to split traffic (YOUR previous output; on the first cycle,
+                   uniform [1,1,1,...]). Traffic split is w[i]/sum(w).
+  total_inbound_pps: aggregate inbound packet rate entering the LB.
+  backends[i].packets_sent:    how many packets went to backend i this window.
+  backends[i].packets_missed:  how many of those were dropped because backend i
+                               exceeded its capacity. sent-missed = effective.
+  backends[i].capacity_hint:   per-backend processing limit in pps. packets
+                               above this are dropped at the backend.
+  backends[i].miss_rate:       packets_missed / packets_sent (0 = healthy,
+                               ~1 = completely overloaded).
+  backends[i].utilization:     packets_sent / (capacity_hint * window_sec)
+                               (<1 headroom; >=1 saturated).
+
+=== THE ALGORITHM YOU SHOULD IMPLEMENT ===
+
+Your weights should track the backends' actual absorbed throughput.
+
+  For each backend i:
+      effective[i] = packets_sent[i] - packets_missed[i]   // what got through
+      if miss_rate[i] > 0:
+          new_weight[i] = effective[i]                     // exact ceiling
+      else:
+          new_weight[i] = sent[i] * 1.1                    // probe up 10%
+
+This is "water-filling": saturated backends snap to their observed ceiling,
+healthy backends probe upward. After 2-3 cycles of this the weights track
+the true capacity ratio and the system sits at ~miss_rate=0 with a small
+headroom margin.
+
+The OBJECTIVE is to minimize sum(packets_missed) across backends while
+keeping total throughput within 5% of current.
+
+=== CONSTRAINTS (strict) ===
+
+- Include only <cstdint>. No <iostream>, no <thread>, no syscalls, no STL
+  containers, no globals with non-trivial destructors.
+- Implement a class deriving from Strategy with select() overridden.
+- select() must return a pointer inside the servers[] array passed to
+  create_strategy(). Do not allocate per-packet.
+- Export `extern "C" Strategy *create_strategy(ServerState *, int)` and
+  `extern "C" void destroy_strategy(Strategy *)`.
+- Dispatch pattern: `target = packet_hash % total_weight; walk cumulative
+  weights`. This is the canonical shape.
+- Bake the weights into a `constexpr uint32_t kWeights[N]` literal; use
+  those in select(). Do NOT read servers[i].weight — they're uniform and
+  uninformative.
+- Total weight must be positive (sum > 0). All weights must be >= 1.
+
+=== OUTPUT ===
+
+Return ONLY C++ source. No markdown fences, no explanation, no prose.
+
+
+Previous attempt failed to compile:
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:8:75: error: extended character → is not valid in an identifier
+    8 | - Backend 0: effective = 10165000 - 1830005 = 8334995, miss_rate=0.18 > 0 → weight = 8334995
+      |                                                                           ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:9:78: error: extended character → is not valid in an identifier
+    9 | - Backend 1: effective = 20690000 - 4025000 = 16665000, miss_rate=0.1945 > 0 → weight = 16665000
+      |                                                                              ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:10:65: error: extended character → is not valid in an identifier
+   10 | - Backend 2: effective = 19145000 - 0 = 19145000, miss_rate=0.0 → weight = 19145000 * 1.1 = 21059500
+      |                                                                 ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:12:21: error: extended character ≥ is not valid in an identifier
+   12 | All weights must be ≥ 1, and we need positive total weight.
+      |                     ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:14:1: error: stray ‘`’ in program
+   14 | ```cpp
+      | ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:14:2: error: stray ‘`’ in program
+   14 | ```cpp
+      |  ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:14:3: error: stray ‘`’ in program
+   14 | ```cpp
+      |   ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:87:1: error: stray ‘`’ in program
+   87 | ```
+      | ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:87:2: error: stray ‘`’ in program
+   87 | ```
+      |  ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:87:3: error: stray ‘`’ in program
+   87 | ```
+      |   ^
+/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:1:1: error: ‘Looking’ does not name a type
+    1 | Looking at the snapshot and previous attempts, I need to apply the water-filling algorithm:
+      | ^~~~~~~
+Fix it.
+
+=== USER ===
+// === Strategy ABI ===
+#pragma once
+#include <cstdint>
+
+/*
+ StrategyInput is an abstract class that handles the inputs. It should include
+all possible needed parameters for every implementation.
+- packet_hash
+- packet_index
+*/
+struct StrategyInput {
+	uint32_t packet_hash;
+	uint32_t packet_index;
+};
+
+/*
+ServerState can have
+- address
+- active connections
+- weight
+*/
+struct ServerState {
+	uint32_t address; // ipv4
+	uint64_t mac;	  // mac
+
+	uint32_t active_connections;
+	uint32_t weight;
+};
+
+class Strategy
+{
+      public:
+	virtual ServerState *select(const StrategyInput &s) = 0;
+	// virtual void update() = 0; // TODO: Implement program->lib update
+	// communication
+	virtual ~Strategy() = default;
+};
+
+extern "C" Strategy *create_strategy(ServerState *servers, int count);
+extern "C" void destroy_strategy(Strategy *s);
+
+// === latest metrics snapshot ===
+{
+  "timestamp": 1776747780,
+  "window_sec": 5.0,
+  "current_weights": [
+    2033,
+    4138,
+    3829
+  ],
+  "total_inbound_pps": 10000000,
+  "backends": [
+    {
+      "idx": 0,
+      "ip": "192.168.1.100",
+      "packets_sent": 10165000,
+      "packets_missed": 1830005,
+      "active_connections": 0,
+      "capacity_hint": 1666999,
+      "miss_rate": 0.18,
+      "utilization": 6.0978,
+      "weight_share": 0.2033,
+      "latency_us": 59.99
+    },
+    {
+      "idx": 1,
+      "ip": "192.168.1.101",
+      "packets_sent": 20690000,
+      "packets_missed": 4025000,
+      "active_connections": 0,
+      "capacity_hint": 3333000,
+      "miss_rate": 0.1945,
+      "utilization": 6.2076,
+      "weight_share": 0.4138,
+      "latency_us": 30.0
+    },
+    {
+      "idx": 2,
+      "ip": "192.168.1.102",
+      "packets_sent": 19145000,
+      "packets_missed": 0,
+      "active_connections": 0,
+      "capacity_hint": 5000000,
+      "miss_rate": 0.0,
+      "utilization": 3.829,
+      "weight_share": 0.3829,
+      "latency_us": 10.0
+    }
+  ]
+}
+
+// === recent attempts (most recent last) ===
+--- attempt 2 (miss_rate=0.082) ---
+#include <cstdint>
+
+struct StrategyInput {
+    uint32_t packet_hash;
+    uint32_t packet_index;
+};
+
+struct ServerState {
+    uint32_t address;
+    uint64_t mac;
+    uint32_t active_connections;
+    uint32_t weight;
+};
+
+class Strategy {
+public:
+    virtual ServerState *select(const StrategyInput &s) = 0;
+    virtual ~Strategy() = default;
+};
+
+class WaterFillingStrategy : public Strategy {
+private:
+    ServerState *servers;
+    int server_count;
+    constexpr static uint32_t kWeights[3] = {
+        16665000,
+        13832000,
+        10668995
+    };
+
+    uint32_t cumulative_weights[3];
+    uint3
+
+--- attempt 3 (miss_rate=0.078) ---
+#include <cstdint>
+
+struct StrategyInput {
+    uint32_t packet_hash;
+    uint32_t packet_index;
+};
+
+struct ServerState {
+    uint32_t address;
+    uint64_t mac;
+    uint32_t active_connections;
+    uint32_t weight;
+};
+
+class Strategy {
+public:
+    virtual ServerState *select(const StrategyInput &s) = 0;
+    virtual ~Strategy() = default;
+};
+
+class WaterFillingStrategy : public Strategy {
+private:
+    ServerState *servers;
+    int server_count;
+    
+    // Water-filling weights based on latest snapshot:
+    // Backend 0: effective = 20330000 - 3665000 = 16665000, miss_rate=0.1803 > 0 -> weight 
+
+--- attempt 4 (miss_rate=0.209) ---
+#include <cstdint>
+
+struct StrategyInput {
+    uint32_t packet_hash;
+    uint32_t packet_index;
+};
+
+struct ServerState {
+    uint32_t address;
+    uint64_t mac;
+    uint32_t active_connections;
+    uint32_t weight;
+};
+
+class Strategy {
+public:
+    virtual ServerState *select(const StrategyInput &s) = 0;
+    virtual ~Strategy() = default;
+};
+
+class WaterFillingStrategy : public Strategy {
+private:
+    ServerState *servers;
+    int server_count;
+    
+    // Water-filling weights based on latest snapshot:
+    // Backend 0: effective = 17860000 - 9525005 = 8334995, miss_rate=0.5333 > 0 -> weight =
+
+
+Write the new Strategy source file now.

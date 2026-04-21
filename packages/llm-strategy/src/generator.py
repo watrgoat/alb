@@ -25,25 +25,66 @@ from pathlib import Path
 
 DEFAULT_MODEL = "claude-haiku-4-5"
 
-SYSTEM_PROMPT = """You write C++ load-balancer strategies.
+SYSTEM_PROMPT = """You write C++ load-balancer strategies that get hot-swapped into a live
+packet forwarder. Every cycle you receive a metrics snapshot and must emit
+one self-contained C++ source file implementing the Strategy ABI.
 
-Return one self-contained C++ source file implementing the Strategy ABI below.
-No markdown fences, no explanation, no prose. Source only.
+=== WHAT THE SNAPSHOT FIELDS MEAN ===
 
-Hard constraints:
-- Include only <cstdint>. No <iostream>, no <thread>, no syscalls, no globals
-  with non-trivial destructors.
-- Implement a class deriving from Strategy with a non-virtual select() that
-  returns a pointer inside the servers array passed to create_strategy.
+Each snapshot describes the window since your last strategy was installed:
+
+  current_weights: the integer weight vector the currently-running .so uses
+                   to split traffic (YOUR previous output; on the first cycle,
+                   uniform [1,1,1,...]). Traffic split is w[i]/sum(w).
+  total_inbound_pps: aggregate inbound packet rate entering the LB.
+  backends[i].packets_sent:    how many packets went to backend i this window.
+  backends[i].packets_missed:  how many of those were dropped because backend i
+                               exceeded its capacity. sent-missed = effective.
+  backends[i].capacity_hint:   per-backend processing limit in pps. packets
+                               above this are dropped at the backend.
+  backends[i].miss_rate:       packets_missed / packets_sent (0 = healthy,
+                               ~1 = completely overloaded).
+  backends[i].utilization:     packets_sent / (capacity_hint * window_sec)
+                               (<1 headroom; >=1 saturated).
+
+=== THE ALGORITHM YOU SHOULD IMPLEMENT ===
+
+Your weights should track the backends' actual absorbed throughput.
+
+  For each backend i:
+      effective[i] = packets_sent[i] - packets_missed[i]   // what got through
+      if miss_rate[i] > 0:
+          new_weight[i] = effective[i]                     // exact ceiling
+      else:
+          new_weight[i] = sent[i] * 1.1                    // probe up 10%
+
+This is "water-filling": saturated backends snap to their observed ceiling,
+healthy backends probe upward. After 2-3 cycles of this the weights track
+the true capacity ratio and the system sits at ~miss_rate=0 with a small
+headroom margin.
+
+The OBJECTIVE is to minimize sum(packets_missed) across backends while
+keeping total throughput within 5% of current.
+
+=== CONSTRAINTS (strict) ===
+
+- Include only <cstdint>. No <iostream>, no <thread>, no syscalls, no STL
+  containers, no globals with non-trivial destructors.
+- Implement a class deriving from Strategy with select() overridden.
+- select() must return a pointer inside the servers[] array passed to
+  create_strategy(). Do not allocate per-packet.
 - Export `extern "C" Strategy *create_strategy(ServerState *, int)` and
   `extern "C" void destroy_strategy(Strategy *)`.
-- Do not allocate shared state outside the Strategy instance. Do not call
-  exit(). Do not loop unboundedly inside select().
+- Dispatch pattern: `target = packet_hash % total_weight; walk cumulative
+  weights`. This is the canonical shape.
+- Bake the weights into a `constexpr uint32_t kWeights[N]` literal; use
+  those in select(). Do NOT read servers[i].weight — they're uniform and
+  uninformative.
+- Total weight must be positive (sum > 0). All weights must be >= 1.
 
-Objective: minimize sum(packets_missed) across backends while keeping total
-throughput within 5% of current. Use per-backend capacity_hint and recent
-miss rates to bias routing. Dispatch by `packet_hash % total_weight` is a
-safe pattern; `active_connections` can weight it further.
+=== OUTPUT ===
+
+Return ONLY C++ source. No markdown fences, no explanation, no prose.
 """
 
 ABI_MARKER = "// === Strategy ABI ===\n"
@@ -293,6 +334,7 @@ def run_cycle(
     history: list[dict],
     force_stub: bool,
     latency_log: Path | None = None,
+    llm_log_dir: Path | None = None,
 ) -> tuple[bool, list[float]]:
     use_llm = bool(not force_stub
                    and os.environ.get("ANTHROPIC_API_KEY")
@@ -309,15 +351,12 @@ def run_cycle(
             sys_prompt = SYSTEM_PROMPT
             if last_err:
                 sys_prompt += f"\n\nPrevious attempt failed to compile:\n{last_err}\nFix it."
+            user_prompt = build_user_prompt(
+                load_abi(include_dir / "strategy.hpp"), snapshot, history)
             llm_start = time.monotonic()
             try:
-                source = strip_fences(
-                    call_claude(
-                        sys_prompt,
-                        build_user_prompt(load_abi(include_dir / "strategy.hpp"), snapshot, history),
-                        model,
-                    )
-                )
+                raw_response = call_claude(sys_prompt, user_prompt, model)
+                source = strip_fences(raw_response)
             except Exception as exc:
                 print(f"[cycle {cycle}] LLM call failed ({exc}); falling back to stub",
                       file=sys.stderr)
@@ -325,6 +364,19 @@ def run_cycle(
                 use_llm = False
                 continue
             llm_ms_total += (time.monotonic() - llm_start) * 1000
+
+            # debug trace — written lazily so --llm-log is zero-cost when unset
+            if llm_log_dir is not None:
+                try:
+                    llm_log_dir.mkdir(parents=True, exist_ok=True)
+                    tag = f"cycle{cycle:04d}_a{attempt}"
+                    (llm_log_dir / f"{tag}.prompt.txt").write_text(
+                        f"=== SYSTEM ===\n{sys_prompt}\n"
+                        f"\n=== USER ===\n{user_prompt}\n"
+                    )
+                    (llm_log_dir / f"{tag}.response.cpp").write_text(raw_response)
+                except OSError as exc:
+                    print(f"warn: llm-log write failed: {exc}", file=sys.stderr)
         else:
             weights, cap_est = stub_weights(cap_est, snapshot)
             source = emit_stub_source(weights)
@@ -430,6 +482,10 @@ def parse_args() -> argparse.Namespace:
                     help="append JSON-lines per-cycle latency records here "
                          "(fields: t, cycle, attempt, mode, status, "
                          "cycle_ms, llm_ms, compile_ms, smoke_ms)")
+    ap.add_argument("--llm-log", type=Path, default=None,
+                    help="dump every LLM prompt/response pair to this "
+                         "directory as numbered files — useful for "
+                         "debugging what the model is actually returning.")
     return ap.parse_args()
 
 
@@ -473,6 +529,7 @@ def main():
             cycle, snap, workdir, strategies_dir, include_dir,
             smoke_bin, args.model, cap_est, history, args.stub,
             latency_log=args.latency_log,
+            llm_log_dir=args.llm_log,
         )
 
         if args.once or args.feed == "-":

@@ -25,7 +25,10 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-SATURATION_US = 100_000.0
+# matches metrics_adapter.py::estimate_latency_us default. latency is
+# clamped at this when a backend is at-or-over capacity — the "excess"
+# isn't queued, it's visible in miss_rate on the convergence plot.
+LATENCY_CEILING_US = 500.0
 
 
 def read_simulated_latency(path: Path) -> tuple[list[str], dict[str, dict[int, float]]]:
@@ -144,7 +147,7 @@ def main() -> int:
     # the top of each subplot. on log-y axes, putting them at 80% of
     # the ceiling keeps them visible but clear of the saturation line.
     swap_ts = [t for t, _ in swaps]
-    swap_y_top = SATURATION_US * 0.8
+    swap_y_top = LATENCY_CEILING_US * 0.8
 
     def draw_hotswaps(ax):
         # thin vertical lines so spatial correlation with latency
@@ -159,27 +162,29 @@ def main() -> int:
                        zorder=6, label=f"hot-swap ({len(swap_ts)})",
                        edgecolors="white", linewidths=0.3)
 
-    # per-backend latency
+    # per-backend latency. served packets only — over-cap packets are
+    # dropped, not queued, so they don't contribute to latency (they
+    # show up in miss_rate on the convergence plot instead).
     for i, ip in enumerate(ips):
         ax = axes[i]
         ys = series[ip]
-        # saturation markers: where did latency hit the ceiling?
-        sat_x = [x for x, y in zip(rel, ys) if y is not None and y >= SATURATION_US]
-        finite_y = [y for y in ys if y is not None]
+        # mark where the backend was at-or-over capacity this window
+        # (the latency line is clamped there, and the dropped fraction
+        # was non-zero).
+        over_x = [x for x, y in zip(rel, ys)
+                  if y is not None and y >= LATENCY_CEILING_US]
         color = colors[i % len(colors)]
 
         ax.plot(rel, ys, color=color, linewidth=1.8,
-                label=f"mean latency ({ip})")
-        ax.axhline(SATURATION_US, color="grey", linestyle=":", linewidth=0.9,
-                   alpha=0.6, label="saturation ceiling (100ms)")
-        if sat_x:
-            ax.scatter(sat_x, [SATURATION_US] * len(sat_x),
+                label=f"served-packet latency ({ip})")
+        if over_x:
+            ax.scatter(over_x, [LATENCY_CEILING_US] * len(over_x),
                        color="#d62728", s=12, marker="x",
-                       label="saturated (sent ≥ cap)", zorder=5)
+                       label="over-capacity (packets dropped)", zorder=5)
         draw_hotswaps(ax)
         ax.set_yscale("log")
-        # y-axis: from base latency (10µs) up through saturation
-        ax.set_ylim(5.0, SATURATION_US * 1.5)
+        # y-axis: show from base latency through the ceiling with headroom
+        ax.set_ylim(5.0, LATENCY_CEILING_US * 1.6)
         ax.set_ylabel(f"backend {i}\n{ip}\nµs", fontsize=9)
         ax.grid(True, which="both", alpha=0.25)
         ax.legend(loc="upper right", fontsize=8, ncol=2, framealpha=0.92)
@@ -191,11 +196,9 @@ def main() -> int:
     for i, ip in enumerate(ips):
         ax.plot(rel, series[ip], color=colors[i % len(colors)],
                 linewidth=1.6, label=ip)
-    ax.axhline(SATURATION_US, color="grey", linestyle=":", linewidth=0.9,
-               alpha=0.6, label="saturation ceiling")
     draw_hotswaps(ax)
     ax.set_yscale("log")
-    ax.set_ylim(5.0, SATURATION_US * 1.5)
+    ax.set_ylim(5.0, LATENCY_CEILING_US * 1.6)
     ax.set_ylabel("all backends\nµs", fontsize=9)
     ax.set_xlabel("seconds since start", fontsize=10)
     ax.grid(True, which="both", alpha=0.25)
@@ -220,9 +223,9 @@ def main() -> int:
         p50 = finite_sorted[len(finite_sorted) // 2]
         p99 = finite_sorted[int(len(finite_sorted) * 0.99)]
         peak = max(finite_sorted)
-        sat_frac = sum(1 for v in finite if v >= SATURATION_US) / len(finite)
+        over_frac = sum(1 for v in finite if v >= LATENCY_CEILING_US) / len(finite)
         print(f"{ip}: p50={p50:.0f}µs  p99={p99:.0f}µs  peak={peak:.0f}µs  "
-              f"saturated={sat_frac * 100:.1f}% of samples",
+              f"over-cap={over_frac * 100:.1f}% of samples",
               file=sys.stderr)
     return 0
 

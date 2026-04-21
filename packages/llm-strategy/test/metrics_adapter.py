@@ -60,19 +60,26 @@ def active_entry(schedule: list[dict], elapsed_sec: float) -> dict:
 
 def caps_at(schedule: list[dict], elapsed_sec: float,
             baseline_total_pps: float | None,
-            fallback_total_pps: float) -> list[int]:
+            fallback_total_pps: float,
+            saturation_level: float = 1.0) -> list[int]:
     """Return per-backend capacity in pps for the current schedule phase.
 
     If the entry has caps_pps, return verbatim. If it has caps_fraction,
     multiply each fraction by baseline_total_pps (or fallback if not yet
     calibrated).
+
+    saturation_level applies to fractional schedules only — it scales
+    the resolved cap. default 1.0 means "fractions × baseline" exactly;
+    <1.0 over-subscribes (forces miss regardless of routing); >1.0
+    leaves headroom. caps_pps schedules are returned verbatim since
+    they're already absolute.
     """
     entry = active_entry(schedule, elapsed_sec)
     if "caps_pps" in entry:
         return [int(x) for x in entry["caps_pps"]]
     if "caps_fraction" in entry:
         denom = baseline_total_pps if baseline_total_pps is not None else fallback_total_pps
-        return [int(f * denom) for f in entry["caps_fraction"]]
+        return [int(f * denom * saturation_level) for f in entry["caps_fraction"]]
     raise ValueError(f"schedule entry missing caps_pps or caps_fraction: {entry}")
 
 
@@ -145,24 +152,35 @@ def read_last_tx_rate(csv_path: Path, window_sec: int) -> float | None:
 
 def estimate_latency_us(sent_pps: float, cap_pps: float,
                         base_us: float = 10.0,
-                        saturation_us: float = 100_000.0) -> float:
+                        max_us: float = 500.0) -> float:
     """Synthetic mean packet latency for a backend under load.
 
-    Uses a simple M/M/1 sojourn-time model: mean latency = 1 / (μ − λ)
-    where μ = service rate (cap_pps) and λ = arrival rate (sent_pps).
-    Floored at `base_us` (think: fixed per-packet processing + cable)
-    and clamped at `saturation_us` when the backend is at or past
-    capacity — a saturated M/M/1 queue has unbounded mean latency, so
-    any finite number is a convention; 100ms is well above the
-    interesting convergence region and makes saturation visible on the
-    plot without breaking the y-axis.
+    This is a packet load balancer, not a classical queue: packets above
+    capacity are DROPPED, not buffered. So the latency we report is the
+    latency experienced by the packets that actually got through. That
+    stays bounded even when the backend is over-subscribed — the
+    over-subscription shows up as packets_missed, not as infinite queue.
+
+    Curve:
+      - utilization in [0, 0.9]: mostly flat at base_us (cable + fwd cost)
+      - utilization in (0.9, 1.0): mild queue-like ramp up to max_us
+      - utilization >= 1.0: clamped at max_us (served packets still
+        drain at near capacity; the excess is dropped)
+
+    Max defaults to 500µs so a bad cycle is visible on a log plot
+    without a three-order-of-magnitude spike dominating the figure.
     """
     if cap_pps <= 0 or sent_pps <= 0:
         return base_us
-    if sent_pps >= cap_pps:
-        return saturation_us
-    mean_s = 1.0 / (cap_pps - sent_pps)
-    return max(base_us, min(saturation_us, mean_s * 1_000_000.0))
+    # served-packet utilization is capped at 1: nothing beyond cap
+    # actually goes through, so its latency is undefined (irrelevant).
+    rho = min(sent_pps / cap_pps, 0.99)
+    # M/M/1 sojourn, rescaled into microseconds relative to the
+    # service interval 1/cap. this turns into a smooth base..max ramp
+    # that tops out near max_us as rho → 0.99.
+    service_us = 1_000_000.0 / cap_pps
+    raw = service_us / max(0.01, 1.0 - rho)
+    return max(base_us, min(max_us, raw))
 
 
 def simulate_sent_miss(total_inbound_pps: float,
@@ -265,6 +283,12 @@ def main() -> int:
                          "else 3e6.")
     ap.add_argument("--tx-csv", type=Path, default=None,
                     help="tx-stats.csv path (--simulate uses this for rate)")
+    ap.add_argument("--saturation-level", type=float, default=1.0,
+                    help="scales resolved caps from caps_fraction schedules. "
+                         "1.0 = total caps == inbound (exact saturation — no "
+                         "phase ever has stable under-capacity backends). "
+                         "<1.0 forces miss (over-subscribed). >1.0 leaves "
+                         "headroom. only affects caps_fraction entries.")
     args = ap.parse_args()
 
     backend_ips = read_backend_ips(args.config)
@@ -319,13 +343,18 @@ def main() -> int:
                 weights = read_current_weights(args.strategies_dir,
                                                len(backend_ips))
                 caps = caps_at(schedule, elapsed,
-                               baseline_total_pps, args.fallback_total_pps)
+                               baseline_total_pps, args.fallback_total_pps,
+                               saturation_level=args.saturation_level)
                 sim = simulate_sent_miss(baseline_total_pps, weights,
                                          caps, args.window)
+                total_w = sum(weights) or 1
                 snap = {
                     "timestamp": now,
                     "window_sec": args.window,
-                    "weights": weights,
+                    # renamed so the LLM prompt reading this JSON
+                    # understands what the field represents. the adapter
+                    # obtained these by sampling select() on the live .so.
+                    "current_weights": weights,
                     "total_inbound_pps": int(baseline_total_pps),
                     "backends": [
                         {
@@ -335,10 +364,16 @@ def main() -> int:
                             "packets_missed": miss,
                             "active_connections": 0,
                             "capacity_hint": int(caps[idx]),
-                            # simulated per-backend mean packet latency.
-                            # not in the generator's prompt schema (the
-                            # generator doesn't consume latency) — but
-                            # the plot reads it from snapshots.jsonl.
+                            # derived ratios — easier signal for the
+                            # LLM than raw counts:
+                            #   miss_rate    = miss / sent
+                            #   utilization  = sent / cap
+                            # both dimensionless in [0, inf). stub and
+                            # test code can still read raw counts above.
+                            "miss_rate": round(miss / sent, 4) if sent else 0.0,
+                            "utilization": round(sent / caps[idx], 4)
+                                            if caps[idx] else 0.0,
+                            "weight_share": round(weights[idx] / total_w, 4),
                             "latency_us": round(lat_us, 2),
                         }
                         for idx, (sent, miss, lat_us) in enumerate(sim)
@@ -366,7 +401,8 @@ def main() -> int:
                                 f"{baseline_total_pps:.0f}\n")
 
                 caps = caps_at(schedule, elapsed,
-                               baseline_total_pps, args.fallback_total_pps)
+                               baseline_total_pps, args.fallback_total_pps,
+                               saturation_level=args.saturation_level)
                 snap = build_snapshot(
                     timestamp_sec=now,
                     window_sec=args.window,

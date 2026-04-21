@@ -52,7 +52,28 @@ ADAPTER_WINDOW="${ADAPTER_WINDOW:-5}"
 # feedback path with a clean simulation so the convergence behavior is
 # testable without traffic-generator overload skewing the data.
 SIMULATE="${SIMULATE:-1}"
-SIMULATE_RATE_PPS="${SIMULATE_RATE_PPS:-3000000}"
+# 600 kpps: with the default schedule this puts per-backend caps around
+# 200 kpps in the equal-split phase (user's request) and 100 kpps /
+# 200 kpps / 300 kpps in the 1:2:3 phase — numbers small enough for
+# the LLM prompt to reason about cleanly without integer-rounding noise
+# taking over.
+#
+# DEMO_MODE=1 inflates the synthetic rate to ~10 Mpps total (~3.3 Mpps
+# per backend in the equal-split phase) — same curves, just bigger
+# numbers on the plot. Does NOT change real NIC behavior, only the
+# simulated feedback signal. Explicit SIMULATE_RATE_PPS always wins.
+if [ "${DEMO_MODE:-0}" = "1" ]; then
+    SIMULATE_RATE_PPS="${SIMULATE_RATE_PPS:-10000000}"
+    echo "[demo mode] SIMULATE_RATE_PPS=$SIMULATE_RATE_PPS"
+else
+    SIMULATE_RATE_PPS="${SIMULATE_RATE_PPS:-600000}"
+fi
+# SATURATION_LEVEL multiplies the caps resolved from caps_fraction
+# entries. default 1.0 = total caps equal total inbound exactly, so
+# every converged phase has every backend near its cap (no stable
+# "sitting under-capacity" backends). <1.0 forces drops regardless of
+# routing; >1.0 allows headroom.
+SATURATION_LEVEL="${SATURATION_LEVEL:-1.0}"
 
 ALB_BIN="$PROJECT_DIR/bazel-bin/src/alb"
 GEN_BIN="$PROJECT_DIR/bazel-bin/packages/traffic-generator/traffic-generator"
@@ -181,9 +202,10 @@ if [ "$SIMULATE" = "1" ]; then
         --simulate
         --strategies-dir    "$STRATEGIES_DIR"
         --simulate-rate-pps "$SIMULATE_RATE_PPS"
+        --saturation-level  "$SATURATION_LEVEL"
         --tx-csv            "$OUTDIR/tx-stats.csv"
     )
-    echo "Adapter: SIMULATE mode (rate=${SIMULATE_RATE_PPS} pps)"
+    echo "Adapter: SIMULATE mode (rate=${SIMULATE_RATE_PPS} pps, sat=${SATURATION_LEVEL})"
 else
     echo "Adapter: REAL mode (feedback from traffic-stats.csv)"
 fi
@@ -222,6 +244,7 @@ fi
     --model           "$MODEL" \
     --interval        "$GEN_INTERVAL" \
     --latency-log     "$OUTDIR/latency.jsonl" \
+    --llm-log         "$OUTDIR/llm_trace" \
     $STUB_FLAG \
     > "$OUTDIR/llmgen.log" 2>&1 &
 LLM_PID=$!
@@ -279,6 +302,7 @@ echo "  snapshot.json        — last snapshot fed to the LLM generator"
 echo "  snapshots.jsonl      — full adapter history (one JSON per cycle)"
 echo "  llmgen.log           — generator cycle log (which attempts succeeded)"
 echo "  latency.jsonl        — per-cycle latency breakdown (JSON lines)"
+echo "  llm_trace/           — per-cycle LLM prompts + raw responses (only populated when running in LLM mode)"
 echo "  adapter.log          — adapter heartbeats (includes baseline calibration)"
 echo "  alb.log, gen.log, col.log"
 echo "  convergence-real.png — per-backend observed vs synthetic capacity"

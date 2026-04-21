@@ -1,0 +1,29 @@
+libbpf: loading object 'traffic_collector_bpf' from buffer
+libbpf: elf: section(3) xdp, size 256, link 0, flags 6, type=1
+libbpf: sec 'xdp': found program 'xdp_prog_simple' at insn offset 0 (0 bytes), code size 32 insns (256 bytes)
+libbpf: elf: section(4) .relxdp, size 32, link 27, flags 40, type=9
+libbpf: elf: section(5) .rodata, size 4, link 0, flags 2, type=1
+libbpf: elf: section(6) license, size 13, link 0, flags 3, type=1
+libbpf: license of traffic_collector_bpf is Dual BSD/GPL
+libbpf: elf: section(7) .maps, size 32, link 0, flags 3, type=1
+libbpf: elf: section(17) .BTF, size 1365, link 0, flags 0, type=1
+libbpf: elf: section(19) .BTF.ext, size 288, link 0, flags 0, type=1
+libbpf: elf: section(27) .symtab, size 432, link 1, flags 0, type=2
+libbpf: looking for externs among 18 symbols...
+libbpf: collected 0 externs total
+libbpf: map 'counts': at sec_idx 7, offset 0.
+libbpf: map 'counts': found type = 1.
+libbpf: map 'counts': found key [8], sz = 4.
+libbpf: map 'counts': found value [11], sz = 8.
+libbpf: map 'counts': found max_entries = 1024.
+libbpf: map 'traffic_.rodata' (global data): at sec_idx 5, offset 0, flags 480.
+libbpf: map 1 is "traffic_.rodata"
+libbpf: sec '.relxdp': collecting relocation for section(3) 'xdp'
+libbpf: sec '.relxdp': relo #0: insn #13 against 'counts'
+libbpf: prog 'xdp_prog_simple': found map 0 (counts, sec 7, off 0) for insn #13
+libbpf: sec '.relxdp': relo #1: insn #26 against 'counts'
+libbpf: prog 'xdp_prog_simple': found map 0 (counts, sec 7, off 0) for insn #26
+libbpf: object 'traffic_collect': failed (-22) to create BPF token from '/sys/fs/bpf', skipping optional step...
+libbpf: map 'counts': created successfully, fd=3
+libbpf: map 'traffic_.rodata': created successfully, fd=4
+Collecting traffic stats to traffic-stats.csv every 1s...
