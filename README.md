@@ -32,6 +32,8 @@ Requires 3+ lcores: main (stats), workers (TX), last worker (RX drain).
 | `traffic-generator_build_test` | Verifies DPDK linkage |
 | `eal_init_test` | DPDK EAL init with virtual device |
 | `tx_test` | Verifies nonzero TX throughput |
+| `llm_convergence_test` | LLM-driven strategy convergence under shifting backend capacity |
+| `llm_generator_stub_test` | Generator CLI (stub mode) compiles + installs a valid .so end-to-end |
 
 DPDK tests use `--no-huge --no-pci --vdev=net_null0` — no real NICs or hugepages needed.
 
@@ -41,6 +43,7 @@ DPDK tests use `--no-huge --no-pci --vdev=net_null0` — no real NICs or hugepag
 |---------|-------------|
 | [balancer-strategies](packages/balancer-strategies/) | Pluggable load-balancing strategies (C++) |
 | [config](packages/config/) | YAML config parser for backends (C) |
+| [llm-strategy](packages/llm-strategy/) | LLM-driven strategy generator + convergence harness |
 | [traffic-generator](packages/traffic-generator/) | DPDK packet generator (C) |
 | [version-table](packages/version-table/) | Lock-free hot-swap table (C++) |
 

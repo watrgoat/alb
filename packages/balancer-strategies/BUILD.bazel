@@ -8,6 +8,14 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+# raw file dep for runtime consumers (e.g. llm-strategy's generator compiles
+# freshly-generated source against this header).
+filegroup(
+    name = "strategy_hdr",
+    srcs = ["include/strategy.hpp"],
+    visibility = ["//visibility:public"],
+)
+
 cc_binary(
     name = "libteststrategy.so",
     srcs = ["strategies/test-strategy-impl.cpp"],
