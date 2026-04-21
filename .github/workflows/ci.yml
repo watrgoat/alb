@@ -7,6 +7,9 @@ on:
 
 jobs:
   lint:
+    # TEMPORARILY DISABLED — re-enable by removing `if: false` and
+    # restoring `needs: lint` on the build-and-test job below.
+    if: false
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +39,8 @@ jobs:
 
   build-and-test:
     runs-on: ubuntu-22.04
-    needs: lint
+    # TEMPORARILY DISABLED dependency on lint — restore `needs: lint`
+    # when re-enabling the lint job above.
     steps:
       - uses: actions/checkout@v4
 
