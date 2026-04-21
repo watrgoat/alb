@@ -2,5 +2,6 @@
   {"t_offset_sec": 0,   "caps_fraction": [0.3333, 0.3333, 0.3334], "note": "equal — sum=1.0 (exact saturation)"},
   {"t_offset_sec": 30,  "caps_fraction": [0.1667, 0.3333, 0.5000], "note": "1:2:3 ratios, sum=1.0"},
   {"t_offset_sec": 90,  "caps_fraction": [0.5000, 0.1667, 0.3333], "note": "3:1:2 ratios, sum=1.0"},
-  {"t_offset_sec": 150, "caps_fraction": [0.3333, 0.3333, 0.3334], "note": "back to equal"}
+  {"t_offset_sec": 150, "caps_fraction": [0.3333, 0.3333, 0.3334], "note": "back to equal"},
+  {"t_offset_sec": 210, "caps_fraction": [0.3167, 0.3167, 0.3166], "note": "5% over-subscribed — sum=0.95. exposes the achievable-miss floor: perfect routing still drops ~5%."}
 ]

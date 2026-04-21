@@ -14,28 +14,63 @@ Each snapshot describes the window since your last strategy was installed:
   backends[i].packets_sent:    how many packets went to backend i this window.
   backends[i].packets_missed:  how many of those were dropped because backend i
                                exceeded its capacity. sent-missed = effective.
-  backends[i].capacity_hint:   per-backend processing limit in pps. packets
-                               above this are dropped at the backend.
+  backends[i].capacity_hint:   per-backend processing limit IN PPS — this is
+                               live ground truth, updated every cycle by the
+                               adapter. TRUST IT. At steady state the optimal
+                               split is weights[i] proportional to
+                               capacity_hint[i].
   backends[i].miss_rate:       packets_missed / packets_sent (0 = healthy,
                                ~1 = completely overloaded).
   backends[i].utilization:     packets_sent / (capacity_hint * window_sec)
                                (<1 headroom; >=1 saturated).
 
+  recent_history: a list of the last few cycles' aggregate stats —
+                  {cycle, weights, per-backend (miss_rate, utilization),
+                  total_miss_rate}. Use this to detect oscillation: if your
+                  previous rewrite made total_miss_rate worse, don't keep
+                  going the same direction.
+
 === THE ALGORITHM YOU SHOULD IMPLEMENT ===
 
-Your weights should track the backends' actual absorbed throughput.
+Anchor on capacity_hint — it's the one-shot optimum at saturation. Then
+clip observed evidence so you never propose a share larger than a
+backend's live cap can absorb.
+
+  window = window_sec
+  cap_budget[i] = max(1, capacity_hint[i] * window)   // packets the
+                                                      // backend can drain
+                                                      // this window
 
   For each backend i:
-      effective[i] = packets_sent[i] - packets_missed[i]   // what got through
       if miss_rate[i] > 0:
-          new_weight[i] = effective[i]                     // exact ceiling
+          // we saw it overflow — two independent upper bounds. take the
+          // stricter: whichever is smaller of (observed effective) and
+          // (cap_budget). This snaps to the real ceiling in one cycle.
+          effective[i] = packets_sent[i] - packets_missed[i]
+          new_weight[i] = min(effective[i], cap_budget[i])
       else:
-          new_weight[i] = sent[i] * 1.1                    // probe up 10%
+          // healthy — probe up gently, but NEVER above the live cap.
+          // 5% probe (not 10%) because at sum(caps)=inbound, aggressive
+          // probing on one backend forces miss on another.
+          new_weight[i] = min(packets_sent[i] * 1.05, cap_budget[i])
 
-This is "water-filling": saturated backends snap to their observed ceiling,
-healthy backends probe upward. After 2-3 cycles of this the weights track
-the true capacity ratio and the system sits at ~miss_rate=0 with a small
-headroom margin.
+Then renormalize: scale the weight vector so its ratios are preserved
+but sum(new_weight) stays positive and fits in uint32_t. The concrete
+integer values you pick don't matter — only the ratios do.
+
+All weights must be >= 1. If a backend has capacity_hint == 0, set its
+weight to 1 (minimum share; caller may still route a probe packet).
+
+=== SANITY CHECKS BEFORE YOU EMIT ===
+
+Compute the predicted miss under your proposed weights:
+  share[i]         = new_weight[i] / sum(new_weight)
+  predicted_sent_pps[i] = total_inbound_pps * share[i]
+  predicted_miss_pps    = sum(max(0, predicted_sent_pps[i] - capacity_hint[i]))
+
+If predicted_miss_pps > 0.01 * total_inbound_pps AND sum(capacity_hint)
+>= total_inbound_pps (system is NOT over-subscribed), your weights are
+wrong — pull them closer to capacity_hint ratios and re-check.
 
 The OBJECTIVE is to minimize sum(packets_missed) across backends while
 keeping total throughput within 5% of current.
@@ -105,146 +140,58 @@ extern "C" void destroy_strategy(Strategy *s);
 
 // === latest metrics snapshot ===
 {
-  "timestamp": 1776747780,
+  "timestamp": 1776786244,
   "window_sec": 5.0,
   "current_weights": [
-    2033,
-    4138,
-    3829
+    1660,
+    3347,
+    4993
   ],
   "total_inbound_pps": 10000000,
   "backends": [
     {
       "idx": 0,
       "ip": "192.168.1.100",
-      "packets_sent": 10165000,
-      "packets_missed": 1830005,
+      "packets_sent": 8300000,
+      "packets_missed": 0,
       "active_connections": 0,
       "capacity_hint": 1666999,
-      "miss_rate": 0.18,
-      "utilization": 6.0978,
-      "weight_share": 0.2033,
+      "miss_rate": 0.0,
+      "utilization": 0.9958,
+      "weight_share": 0.166,
       "latency_us": 59.99
     },
     {
       "idx": 1,
       "ip": "192.168.1.101",
-      "packets_sent": 20690000,
-      "packets_missed": 4025000,
+      "packets_sent": 16735000,
+      "packets_missed": 70000,
       "active_connections": 0,
       "capacity_hint": 3333000,
-      "miss_rate": 0.1945,
-      "utilization": 6.2076,
-      "weight_share": 0.4138,
+      "miss_rate": 0.0042,
+      "utilization": 1.0042,
+      "weight_share": 0.3347,
       "latency_us": 30.0
     },
     {
       "idx": 2,
       "ip": "192.168.1.102",
-      "packets_sent": 19145000,
+      "packets_sent": 24965000,
       "packets_missed": 0,
       "active_connections": 0,
       "capacity_hint": 5000000,
       "miss_rate": 0.0,
-      "utilization": 3.829,
-      "weight_share": 0.3829,
-      "latency_us": 10.0
+      "utilization": 0.9986,
+      "weight_share": 0.4993,
+      "latency_us": 20.0
     }
   ]
 }
 
-// === recent attempts (most recent last) ===
---- attempt 2 (miss_rate=0.082) ---
-#include <cstdint>
-
-struct StrategyInput {
-    uint32_t packet_hash;
-    uint32_t packet_index;
-};
-
-struct ServerState {
-    uint32_t address;
-    uint64_t mac;
-    uint32_t active_connections;
-    uint32_t weight;
-};
-
-class Strategy {
-public:
-    virtual ServerState *select(const StrategyInput &s) = 0;
-    virtual ~Strategy() = default;
-};
-
-class WaterFillingStrategy : public Strategy {
-private:
-    ServerState *servers;
-    int server_count;
-    constexpr static uint32_t kWeights[3] = {
-        16665000,
-        13832000,
-        10668995
-    };
-
-    uint32_t cumulative_weights[3];
-    uint3
-
---- attempt 3 (miss_rate=0.078) ---
-#include <cstdint>
-
-struct StrategyInput {
-    uint32_t packet_hash;
-    uint32_t packet_index;
-};
-
-struct ServerState {
-    uint32_t address;
-    uint64_t mac;
-    uint32_t active_connections;
-    uint32_t weight;
-};
-
-class Strategy {
-public:
-    virtual ServerState *select(const StrategyInput &s) = 0;
-    virtual ~Strategy() = default;
-};
-
-class WaterFillingStrategy : public Strategy {
-private:
-    ServerState *servers;
-    int server_count;
-    
-    // Water-filling weights based on latest snapshot:
-    // Backend 0: effective = 20330000 - 3665000 = 16665000, miss_rate=0.1803 > 0 -> weight 
-
---- attempt 4 (miss_rate=0.209) ---
-#include <cstdint>
-
-struct StrategyInput {
-    uint32_t packet_hash;
-    uint32_t packet_index;
-};
-
-struct ServerState {
-    uint32_t address;
-    uint64_t mac;
-    uint32_t active_connections;
-    uint32_t weight;
-};
-
-class Strategy {
-public:
-    virtual ServerState *select(const StrategyInput &s) = 0;
-    virtual ~Strategy() = default;
-};
-
-class WaterFillingStrategy : public Strategy {
-private:
-    ServerState *servers;
-    int server_count;
-    
-    // Water-filling weights based on latest snapshot:
-    // Backend 0: effective = 17860000 - 9525005 = 8334995, miss_rate=0.5333 > 0 -> weight =
-
+// === recent cycles (oldest first, this cycle not included) ===
+cycle=  1 weights=[3310, 3271, 3419] total_miss=0.172  b0(mr=0.335,u=1.50) b1(mr=0.000,u=0.48) b2(mr=0.013,u=1.01)
+cycle=  2 weights=[3290, 3330, 3380] total_miss=0.009  b0(mr=0.000,u=0.99) b1(mr=0.000,u=0.98) b2(mr=0.025,u=1.03)
+cycle=  3 weights=[1662, 3349, 4989] total_miss=0.162  b0(mr=0.493,u=1.97) b1(mr=0.000,u=1.00) b2(mr=0.000,u=0.68)
+cycle=  4 weights=[1660, 3347, 4993] total_miss=0.002  b0(mr=0.000,u=1.00) b1(mr=0.005,u=1.00) b2(mr=0.000,u=1.00)
 
 Write the new Strategy source file now.

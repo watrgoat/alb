@@ -1,84 +1,96 @@
-Looking at the snapshot and previous attempts, I need to apply the water-filling algorithm:
-
-For each backend:
-- If miss_rate > 0: new_weight = effective_packets = packets_sent - packets_missed
-- If miss_rate = 0: new_weight = packets_sent * 1.1
-
-From the snapshot:
-- Backend 0: effective = 10165000 - 1830005 = 8334995, miss_rate=0.18 > 0 → weight = 8334995
-- Backend 1: effective = 20690000 - 4025000 = 16665000, miss_rate=0.1945 > 0 → weight = 16665000
-- Backend 2: effective = 19145000 - 0 = 19145000, miss_rate=0.0 → weight = 19145000 * 1.1 = 21059500
-
-All weights must be ≥ 1, and we need positive total weight.
-
 ```cpp
 #include <cstdint>
 
-struct StrategyInput {
-    uint32_t packet_hash;
-    uint32_t packet_index;
-};
-
-struct ServerState {
-    uint32_t address;
-    uint64_t mac;
-    uint32_t active_connections;
-    uint32_t weight;
-};
-
-class Strategy {
-public:
-    virtual ServerState *select(const StrategyInput &s) = 0;
-    virtual ~Strategy() = default;
-};
-
-class WaterFillingStrategy : public Strategy {
+class CapacityAwareStrategy : public Strategy {
 private:
     ServerState *servers;
     int server_count;
-    
-    // Water-filling weights based on latest snapshot:
-    // Backend 0: effective = 8334995, miss_rate=0.18 > 0 -> weight = 8334995
-    // Backend 1: effective = 16665000, miss_rate=0.1945 > 0 -> weight = 16665000
-    // Backend 2: effective = 19145000, miss_rate=0.0 -> weight = 19145000 * 1.1 = 21059500
-    constexpr static uint32_t kWeights[3] = {
-        8334995,
-        16665000,
-        21059500
-    };
-    
-    uint32_t cumulative_weights[3];
+    uint32_t weights[3];
     uint32_t total_weight;
 
 public:
-    WaterFillingStrategy(ServerState *servers, int count)
-        : servers(servers), server_count(count), total_weight(0) {
-        // Precompute cumulative weights
-        for (int i = 0; i < server_count; ++i) {
-            total_weight += kWeights[i];
-            cumulative_weights[i] = total_weight;
+    CapacityAwareStrategy(ServerState *srv, int count) 
+        : servers(srv), server_count(count), total_weight(0) {
+        
+        // Window parameters
+        constexpr double window_sec = 5.0;
+        constexpr uint32_t total_inbound_pps = 10000000;
+        
+        // Backend metrics (from snapshot)
+        struct BackendMetrics {
+            uint32_t packets_sent;
+            uint32_t packets_missed;
+            uint32_t capacity_hint;
+        } backends[3] = {
+            {8300000, 0, 1666999},
+            {16735000, 70000, 3333000},
+            {24965000, 0, 5000000}
+        };
+        
+        uint32_t new_weights[3];
+        
+        // Algorithm: compute new weights based on capacity hints and observed performance
+        for (int i = 0; i < 3; i++) {
+            uint32_t capacity_hint = backends[i].capacity_hint;
+            uint32_t packets_sent = backends[i].packets_sent;
+            uint32_t packets_missed = backends[i].packets_missed;
+            
+            // cap_budget = max(1, capacity_hint * window)
+            uint32_t cap_budget = capacity_hint > 0 ? capacity_hint : 1;
+            
+            if (packets_missed > 0) {
+                // Backend overflowed: use minimum of effective capacity and cap budget
+                uint32_t effective = packets_sent - packets_missed;
+                new_weights[i] = effective < cap_budget ? effective : cap_budget;
+            } else {
+                // Healthy backend: probe up 5%, but never exceed cap
+                uint32_t probed = (packets_sent * 105) / 100;
+                new_weights[i] = probed < cap_budget ? probed : cap_budget;
+            }
+            
+            // Ensure minimum weight of 1
+            if (new_weights[i] < 1) {
+                new_weights[i] = 1;
+            }
         }
+        
+        // Renormalize to keep ratios while ensuring sum fits in uint32_t
+        uint64_t sum = (uint64_t)new_weights[0] + (uint64_t)new_weights[1] + (uint64_t)new_weights[2];
+        
+        // Scale down if necessary to fit in uint32_t while preserving ratios
+        uint32_t scale_factor = 1;
+        if (sum > 1000000000ULL) {
+            scale_factor = (uint32_t)(sum / 1000000000ULL + 1);
+        }
+        
+        for (int i = 0; i < 3; i++) {
+            weights[i] = new_weights[i] / scale_factor;
+            if (weights[i] < 1) {
+                weights[i] = 1;
+            }
+        }
+        
+        total_weight = weights[0] + weights[1] + weights[2];
     }
 
-    ServerState *select(const StrategyInput &s) override {
-        uint32_t target = s.packet_hash % total_weight;
+    ServerState *select(const StrategyInput &input) override {
+        uint32_t target = input.packet_hash % total_weight;
+        uint32_t cumulative = 0;
         
-        // Binary search or linear walk for cumulative weight
-        for (int i = 0; i < server_count; ++i) {
-            if (target < cumulative_weights[i]) {
+        for (int i = 0; i < server_count; i++) {
+            cumulative += weights[i];
+            if (target < cumulative) {
                 return &servers[i];
             }
         }
         
-        // Fallback to last server
+        // Fallback (should not reach here)
         return &servers[server_count - 1];
     }
-
-    ~WaterFillingStrategy() override = default;
 };
 
 extern "C" Strategy *create_strategy(ServerState *servers, int count) {
-    return new WaterFillingStrategy(servers, count);
+    return new CapacityAwareStrategy(servers, count);
 }
 
 extern "C" void destroy_strategy(Strategy *s) {

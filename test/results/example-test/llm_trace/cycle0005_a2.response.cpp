@@ -19,52 +19,34 @@ public:
     virtual ~Strategy() = default;
 };
 
-class WaterFillingStrategy : public Strategy {
+class CapacityAwareStrategy : public Strategy {
 private:
     ServerState *servers;
     int server_count;
-    
-    constexpr static uint32_t kWeights[3] = {
-        8334995,
-        16665000,
-        21059500
-    };
-    
-    uint32_t cumulative_weights[3];
-    uint32_t total_weight;
-    
-    void compute_cumulative() {
-        cumulative_weights[0] = kWeights[0];
-        cumulative_weights[1] = cumulative_weights[0] + kWeights[1];
-        cumulative_weights[2] = cumulative_weights[1] + kWeights[2];
-        total_weight = cumulative_weights[2];
-    }
+    static constexpr uint32_t kWeights[3] = {1660, 3347, 4993};
 
 public:
-    WaterFillingStrategy(ServerState *servers_ptr, int count) 
-        : servers(servers_ptr), server_count(count) {
-        compute_cumulative();
-    }
+    CapacityAwareStrategy(ServerState *srv, int count)
+        : servers(srv), server_count(count) {}
 
-    ServerState *select(const StrategyInput &s) override {
-        if (server_count <= 0 || total_weight == 0) {
-            return &servers[0];
-        }
-        
-        uint32_t target = s.packet_hash % total_weight;
-        
-        for (int i = 0; i < server_count; i++) {
-            if (target < cumulative_weights[i]) {
+    ServerState *select(const StrategyInput &input) override {
+        uint32_t total_weight = kWeights[0] + kWeights[1] + kWeights[2];
+        uint32_t target = input.packet_hash % total_weight;
+        uint32_t cumulative = 0;
+
+        for (int i = 0; i < server_count; ++i) {
+            cumulative += kWeights[i];
+            if (target < cumulative) {
                 return &servers[i];
             }
         }
-        
+
         return &servers[server_count - 1];
     }
 };
 
 extern "C" Strategy *create_strategy(ServerState *servers, int count) {
-    return new WaterFillingStrategy(servers, count);
+    return new CapacityAwareStrategy(servers, count);
 }
 
 extern "C" void destroy_strategy(Strategy *s) {

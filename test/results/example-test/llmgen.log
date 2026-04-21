@@ -1,85 +1,415 @@
 [cycle 1 attempt 1] compile failed:
-/tmp/llm-strategy-fadfhoe0/strategy_1_1.cpp:9:46: error: expected class-name before ‘{’ token
-    9 | class WaterFillingStrategy : public Strategy {
-      |                                              ^
-/tmp/llm-strategy-fadfhoe0/strategy_1_1.cpp:11:5: error: ‘ServerState’ does not name a type
-   11 |     ServerState *servers;
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:69:1: error: stray ‘`’ in program
+   69 | ```
+      | ^
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:69:2: error: stray ‘`’ in program
+   69 | ```
+      |  ^
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:69:3: error: stray ‘`’ in program
+   69 | ```
+      |   ^
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:73:1: error: stray ‘`’ in program
+   73 | ```cpp
+      | ^
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:73:2: error: stray ‘`’ in program
+   73 | ```cpp
+      |  ^
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:73:3: error: stray ‘`’ in program
+   73 | ```cpp
+      |   ^
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:5:9: error: ‘ServerState’ does not name a type
+    5 |         ServerState *servers;
+      |         ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:9:29: error: expected ‘)’ before ‘*’ token
+    9 |         Strategy(ServerState *s, int c) : servers(s), count(c) {}
+      |                 ~           ^~
+      |                             )
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:11:17: error: ‘ServerState’ does not name a type
+   11 |         virtual ServerState *select(const StrategyInput &input)
+      |                 ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:37:33: error: expected ‘)’ before ‘*’ token
+   37 |         StrategyImpl(ServerState *s, int c) : Strategy(s, c) {}
+      |                     ~           ^~
+      |                                 )
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:39:17: error: ‘ServerState’ does not name a type
+   39 |         virtual ServerState *select(const StrategyInput &input) override
+      |                 ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:60:22: warning: ‘create_strategy’ initialized and declared ‘extern’
+   60 | extern "C" Strategy *create_strategy(ServerState *servers, int count)
+      |                      ^~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_1_1.cpp:60:38: error: ‘ServerState’ was not declared in this sc
+[cycle 2 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:54:1: error: stray ‘`’ in program
+   54 | ```
+      | ^
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:54:2: error: stray ‘`’ in program
+   54 | ```
+      |  ^
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:54:3: error: stray ‘`’ in program
+   54 | ```
+      |   ^
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:58:1: error: stray ‘`’ in program
+   58 | ```cpp
+      | ^
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:58:2: error: stray ‘`’ in program
+   58 | ```cpp
+      |  ^
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:58:3: error: stray ‘`’ in program
+   58 | ```cpp
+      |   ^
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:5:9: error: ‘ServerState’ does not name a type
+    5 |         ServerState *servers;
+      |         ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:11:29: error: expected ‘)’ before ‘*’ token
+   11 |         Strategy(ServerState *s, int c) : servers(s), count(c)
+      |                 ~           ^~
+      |                             )
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:30:17: error: ‘ServerState’ does not name a type
+   30 |         virtual ServerState *select(const StrategyInput &input)
+      |                 ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:45:22: warning: ‘create_strategy’ initialized and declared ‘extern’
+   45 | extern "C" Strategy *create_strategy(ServerState *servers, int count)
+      |                      ^~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:45:38: error: ‘ServerState’ was not declared in this scope
+   45 | extern "C" Strategy *create_strategy(ServerState *servers, int count)
+      |                                      ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:45:51: error: ‘servers’ was not declared in this scope
+   45 | extern "C" Strategy *create_strategy(ServerState *servers, int count)
+      |                                                   ^~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_2_1.cpp:45:60: error: expected primary-
+[cycle 3 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_3_1.cpp:11:47: error: expected class-name before ‘{’ token
+   11 | class CapacityAwareStrategy : public Strategy {
+      |                                               ^
+/tmp/llm-strategy-ej38hz25/strategy_3_1.cpp:13:5: error: ‘ServerState’ does not name a type
+   13 |     ServerState *servers;
       |     ^~~~~~~~~~~
-/tmp/llm-strategy-fadfhoe0/strategy_1_1.cpp:16:37: error: expected ‘)’ before ‘*’ token
-   16 |     WaterFillingStrategy(ServerState *servers_, int count_)
+/tmp/llm-strategy-ej38hz25/strategy_3_1.cpp:19:38: error: expected ‘)’ before ‘*’ token
+   19 |     CapacityAwareStrategy(ServerState *servers_, int count)
+      |                          ~           ^~
+      |                                      )
+/tmp/llm-strategy-ej38hz25/strategy_3_1.cpp:75:5: error: ‘ServerState’ does not name a type
+   75 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_3_1.cpp:92:12: error: ‘Strategy’ does not name a type
+   92 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_3_1.cpp:96:17: error: variable or field ‘destroy_strategy’ declared void
+   96 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_3_1.cpp:96:34: error: ‘Strategy’ was not declared in this scope
+   96 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_3_1.cpp:96:44: error: ‘s’ was not declared in this scope
+   96 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
+[cycle 4 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_4_1.cpp:4:5: error: ‘ServerState’ does not name a type
+    4 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_4_1.cpp:9:25: error: expected ‘)’ before ‘*’ token
+    9 |     Strategy(ServerState *s, int c) : servers(s), count(c) {
+      |             ~           ^~
+      |                         )
+/tmp/llm-strategy-ej38hz25/strategy_4_1.cpp:19:13: error: ‘ServerState’ does not name a type
+   19 |     virtual ServerState *select(const StrategyInput &input) {
+      |             ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_4_1.cpp:34:22: warning: ‘create_strategy’ initialized and declared ‘extern’
+   34 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                      ^~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_4_1.cpp:34:38: error: ‘ServerState’ was not declared in this scope
+   34 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                                      ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_4_1.cpp:34:51: error: ‘servers’ was not declared in this scope
+   34 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                                                   ^~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_4_1.cpp:34:60: error: expected primary-expression before ‘int’
+   34 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                                                            ^~~
+/tmp/llm-strategy-ej38hz25/strategy_4_1.cpp:34:69: error: expression list treated as compound expression in initializer [-fpermissive]
+   34 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                                                                     ^
+[cycle 5 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_5_1.cpp:3:47: error: expected class-name before ‘{’ token
+    3 | class CapacityAwareStrategy : public Strategy {
+      |                                               ^
+/tmp/llm-strategy-ej38hz25/strategy_5_1.cpp:5:5: error: ‘ServerState’ does not name a type
+    5 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_5_1.cpp:11:38: error: expected ‘)’ before ‘*’ token
+   11 |     CapacityAwareStrategy(ServerState *srv, int count)
+      |                          ~           ^~
+      |                                      )
+/tmp/llm-strategy-ej38hz25/strategy_5_1.cpp:75:5: error: ‘ServerState’ does not name a type
+   75 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_5_1.cpp:91:12: error: ‘Strategy’ does not name a type
+   91 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_5_1.cpp:95:17: error: variable or field ‘destroy_strategy’ declared void
+   95 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_5_1.cpp:95:34: error: ‘Strategy’ was not declared in this scope
+   95 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_5_1.cpp:95:44: error: ‘s’ was not declared in this scope
+   95 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
+[cycle 6 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_6_1.cpp:4:5: error: ‘ServerState’ does not name a type
+    4 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_6_1.cpp:9:25: error: expected ‘)’ before ‘*’ token
+    9 |     Strategy(ServerState *s, int c) : servers(s), count(c), total_weight(0) {}
+      |             ~           ^~
+      |                         )
+/tmp/llm-strategy-ej38hz25/strategy_6_1.cpp:11:5: error: ‘ServerState’ does not name a type
+   11 |     ServerState *select(const StrategyInput &input) {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_6_1.cpp:24:22: warning: ‘create_strategy’ initialized and declared ‘extern’
+   24 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                      ^~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_6_1.cpp:24:38: error: ‘ServerState’ was not declared in this scope
+   24 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                                      ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_6_1.cpp:24:51: error: ‘servers’ was not declared in this scope
+   24 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                                                   ^~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_6_1.cpp:24:60: error: expected primary-expression before ‘int’
+   24 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                                                            ^~~
+/tmp/llm-strategy-ej38hz25/strategy_6_1.cpp:24:69: error: expression list treated as compound expression in initializer [-fpermissive]
+   24 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |                                                                     ^
+[cycle 7 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_7_1.cpp:3:40: error: expected class-name before ‘{’ token
+    3 | struct Strategy_Impl : public Strategy {
+      |                                        ^
+/tmp/llm-strategy-ej38hz25/strategy_7_1.cpp:4:5: error: ‘ServerState’ does not name a type
+    4 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_7_1.cpp:9:30: error: expected ‘)’ before ‘*’ token
+    9 |     Strategy_Impl(ServerState *s, int count) : servers(s), server_count(count) {
+      |                  ~           ^~
+      |                              )
+/tmp/llm-strategy-ej38hz25/strategy_7_1.cpp:89:5: error: ‘ServerState’ does not name a type
+   89 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_7_1.cpp:104:12: error: ‘Strategy’ does not name a type
+  104 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_7_1.cpp:108:17: error: variable or field ‘destroy_strategy’ declared void
+  108 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_7_1.cpp:108:34: error: ‘Strategy’ was not declared in this scope
+  108 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_7_1.cpp:108:44: error: ‘s’ was not declared in this scope
+  108 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
+[cycle 9 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:110:1: error: stray ‘`’ in program
+  110 | ```
+      | ^
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:110:2: error: stray ‘`’ in program
+  110 | ```
+      |  ^
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:110:3: error: stray ‘`’ in program
+  110 | ```
+      |   ^
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:114:77: error: extended character → is not valid in an identifier
+  114 | - Backend 0: capacity_hint=5000000, packets_sent=24800000, packets_missed=0 → healthy, probe to min(24800000*1.05, 5000000*5) = min(26040000, 25000000) = 25000000
+      |                                                                             ^
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:115:76: error: extended character → is not valid in an identifier
+  115 | - Backend 1: capacity_hint=1666999, packets_sent=8270000, packets_missed=0 → healthy, probe to min(8270000*1.05, 1666999*5) = min(8683500, 8334995) = 8334995
+      |                                                                            ^
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:116:82: error: extended character → is not valid in an identifier
+  116 | - Backend 2: capacity_hint=3333000, packets_sent=16930000, packets_missed=265000 → overflowed, use min(16930000-265000, 3333000*5) = min(16665000, 16665000) = 16665000
+      |                                                                                  ^
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:118:48: error: extended character ≈ is not valid in an identifier
+  118 | Normalize to ratios: 25000000:8334995:16665000 ≈ 25:8.3:16.7 ≈ 3000:1000:2000
+      |                                                ^
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:118:62: error: extended character ≈ is not valid in an identifier
+  118 | Normalize to ratios: 25000000:8334995:16665000 ≈ 25:8.3:16.7 ≈ 3000:1000:2000
+      |                                                              ^
+/tmp/llm-strategy-ej38hz25/strategy_9_1.cpp:120:1: error: stray ‘`’ i
+[cycle 9 attempt 2] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_9_2.cpp:11:46: error: expected class-name before ‘{’ token
+   11 | class LoadBalancerStrategy : public Strategy {
+      |                                              ^
+/tmp/llm-strategy-ej38hz25/strategy_9_2.cpp:13:5: error: ‘ServerState’ does not name a type
+   13 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_9_2.cpp:19:37: error: expected ‘)’ before ‘*’ token
+   19 |     LoadBalancerStrategy(ServerState *s, int count)
       |                         ~           ^~
       |                                     )
-/tmp/llm-strategy-fadfhoe0/strategy_1_1.cpp:27:5: error: ‘ServerState’ does not name a type
-   27 |     ServerState *select(const StrategyInput &input) override {
+/tmp/llm-strategy-ej38hz25/strategy_9_2.cpp:71:5: error: ‘ServerState’ does not name a type
+   71 |     ServerState *select(const StrategyInput &input) override {
       |     ^~~~~~~~~~~
-/tmp/llm-strategy-fadfhoe0/strategy_1_1.cpp:43:12: error: ‘Strategy’ does not name a type
-   43 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+/tmp/llm-strategy-ej38hz25/strategy_9_2.cpp:88:12: error: ‘Strategy’ does not name a type
+   88 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
       |            ^~~~~~~~
-/tmp/llm-strategy-fadfhoe0/strategy_1_1.cpp:47:17: error: variable or field ‘destroy_strategy’ declared void
-   47 | extern "C" void destroy_strategy(Strategy *s) {
+/tmp/llm-strategy-ej38hz25/strategy_9_2.cpp:92:17: error: variable or field ‘destroy_strategy’ declared void
+   92 | extern "C" void destroy_strategy(Strategy *s) {
       |                 ^~~~~~~~~~~~~~~~
-/tmp/llm-strategy-fadfhoe0/strategy_1_1.cpp:47:34: error: ‘Strategy’ was not declared in this scope
-   47 | extern "C" void destroy_strategy(Strategy *s) {
+/tmp/llm-strategy-ej38hz25/strategy_9_2.cpp:92:34: error: ‘Strategy’ was not declared in this scope
+   92 | extern "C" void destroy_strategy(Strategy *s) {
       |                                  ^~~~~~~~
-/tmp/llm-strategy-fadfhoe0/strategy_1_1.cpp:47:44: error: ‘s’ was not declared in this scope
-   47 | extern "C" void destroy_strategy(Strategy *s) {
+/tmp/llm-strategy-ej38hz25/strategy_9_2.cpp:92:44: error: ‘s’ was not declared in this scope
+   92 | extern "C" void destroy_strategy(Strategy *s) {
       |                                            ^
-[cycle 5 attempt 1] compile failed:
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:8:75: error: extended character → is not valid in an identifier
-    8 | - Backend 0: effective = 10165000 - 1830005 = 8334995, miss_rate=0.18 > 0 → weight = 8334995
-      |                                                                           ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:9:78: error: extended character → is not valid in an identifier
-    9 | - Backend 1: effective = 20690000 - 4025000 = 16665000, miss_rate=0.1945 > 0 → weight = 16665000
-      |                                                                              ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:10:65: error: extended character → is not valid in an identifier
-   10 | - Backend 2: effective = 19145000 - 0 = 19145000, miss_rate=0.0 → weight = 19145000 * 1.1 = 21059500
-      |                                                                 ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:12:21: error: extended character ≥ is not valid in an identifier
-   12 | All weights must be ≥ 1, and we need positive total weight.
-      |                     ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:14:1: error: stray ‘`’ in program
-   14 | ```cpp
-      | ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:14:2: error: stray ‘`’ in program
-   14 | ```cpp
-      |  ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:14:3: error: stray ‘`’ in program
-   14 | ```cpp
-      |   ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:87:1: error: stray ‘`’ in program
-   87 | ```
-      | ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:87:2: error: stray ‘`’ in program
-   87 | ```
-      |  ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:87:3: error: stray ‘`’ in program
-   87 | ```
-      |   ^
-/tmp/llm-strategy-fadfhoe0/strategy_5_1.cpp:1:1: error: ‘Looking’ does not name a type
-    1 | Looking at the snapshot and previous attempts, I need to apply the water-filling algorithm:
-      | ^~~~~~~
+[cycle 9 attempt 3] predicted miss regressed: proposed=0.028 > current=0.005 (tolerance 0.005). proposed weights=[4973, 1413, 3614] caps=[5000000, 1666999, 3333000]
+[cycle 9] gave up after 3 attempts
+[cycle 10 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:3:47: error: expected class-name before ‘{’ token
+    3 | class CapacityAwareStrategy : public Strategy {
+      |                                               ^
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:5:5: error: ‘ServerState’ does not name a type
+    5 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:10:38: error: expected ‘)’ before ‘*’ token
+   10 |     CapacityAwareStrategy(ServerState *servers_arg, int count)
+      |                          ~           ^~
+      |                                      )
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:97:5: error: ‘ServerState’ does not name a type
+   97 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:112:5: error: ‘CapacityAwareStrategy::~CapacityAwareStrategy()’ marked ‘override’, but does not override
+  112 |     ~CapacityAwareStrategy() override = default;
+      |     ^
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:115:12: error: ‘Strategy’ does not name a type
+  115 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:119:17: error: variable or field ‘destroy_strategy’ declared void
+  119 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:119:34: error: ‘Strategy’ was not declared in this scope
+  119 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_10_1.cpp:119:44: error: ‘s’ was not declared in this scope
+  119 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
+[cycle 11 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:3:47: error: expected class-name before ‘{’ token
+    3 | class CapacityAwareStrategy : public Strategy {
+      |                                               ^
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:5:5: error: ‘ServerState’ does not name a type
+    5 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:11:38: error: expected ‘)’ before ‘*’ token
+   11 |     CapacityAwareStrategy(ServerState *servers_, int count)
+      |                          ~           ^~
+      |                                      )
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:110:5: error: ‘ServerState’ does not name a type
+  110 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:124:5: error: ‘CapacityAwareStrategy::~CapacityAwareStrategy()’ marked ‘override’, but does not override
+  124 |     ~CapacityAwareStrategy() override = default;
+      |     ^
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:127:12: error: ‘Strategy’ does not name a type
+  127 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:131:17: error: variable or field ‘destroy_strategy’ declared void
+  131 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:131:34: error: ‘Strategy’ was not declared in this scope
+  131 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_11_1.cpp:131:44: error: ‘s’ was not declared in this scope
+  131 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
+[cycle 12 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_12_1.cpp:11:47: error: expected class-name before ‘{’ token
+   11 | class CapacityAwareStrategy : public Strategy {
+      |                                               ^
+/tmp/llm-strategy-ej38hz25/strategy_12_1.cpp:13:5: error: ‘ServerState’ does not name a type
+   13 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_12_1.cpp:62:38: error: expected ‘)’ before ‘*’ token
+   62 |     CapacityAwareStrategy(ServerState *srv, int cnt)
+      |                          ~           ^~
+      |                                      )
+/tmp/llm-strategy-ej38hz25/strategy_12_1.cpp:67:5: error: ‘ServerState’ does not name a type
+   67 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_12_1.cpp:82:12: error: ‘Strategy’ does not name a type
+   82 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_12_1.cpp:86:17: error: variable or field ‘destroy_strategy’ declared void
+   86 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_12_1.cpp:86:34: error: ‘Strategy’ was not declared in this scope
+   86 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_12_1.cpp:86:44: error: ‘s’ was not declared in this scope
+   86 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
+[cycle 13 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_13_1.cpp:3:47: error: expected class-name before ‘{’ token
+    3 | class CapacityAwareStrategy : public Strategy {
+      |                                               ^
+/tmp/llm-strategy-ej38hz25/strategy_13_1.cpp:5:5: error: ‘ServerState’ does not name a type
+    5 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_13_1.cpp:11:38: error: expected ‘)’ before ‘*’ token
+   11 |     CapacityAwareStrategy(ServerState *srv, int count)
+      |                          ~           ^~
+      |                                      )
+/tmp/llm-strategy-ej38hz25/strategy_13_1.cpp:83:5: error: ‘ServerState’ does not name a type
+   83 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_13_1.cpp:100:12: error: ‘Strategy’ does not name a type
+  100 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_13_1.cpp:104:17: error: variable or field ‘destroy_strategy’ declared void
+  104 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_13_1.cpp:104:34: error: ‘Strategy’ was not declared in this scope
+  104 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_13_1.cpp:104:44: error: ‘s’ was not declared in this scope
+  104 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
 generator: interrupted, flushing and exiting
-[cycle 1] installed via attempt 2 (mode=llm, cycle=8102ms compile=409ms smoke=2ms llm=7688ms)
-[cycle 2] installed via attempt 1 (mode=llm, cycle=3132ms compile=96ms smoke=2ms llm=3033ms)
-[cycle 3] installed via attempt 1 (mode=llm, cycle=4401ms compile=78ms smoke=5ms llm=4316ms)
-[cycle 4] installed via attempt 1 (mode=llm, cycle=4239ms compile=159ms smoke=19ms llm=4060ms)
-[cycle 5] installed via attempt 2 (mode=llm, cycle=8788ms compile=197ms smoke=2ms llm=8587ms)
-[cycle 6] installed via attempt 1 (mode=llm, cycle=3942ms compile=77ms smoke=2ms llm=3862ms)
-[cycle 7] installed via attempt 1 (mode=llm, cycle=3719ms compile=72ms smoke=2ms llm=3644ms)
-[cycle 8] installed via attempt 1 (mode=llm, cycle=4240ms compile=150ms smoke=2ms llm=4087ms)
-[cycle 9] installed via attempt 1 (mode=llm, cycle=4524ms compile=391ms smoke=6ms llm=4126ms)
-[cycle 10] installed via attempt 1 (mode=llm, cycle=3951ms compile=144ms smoke=2ms llm=3804ms)
-[cycle 11] installed via attempt 1 (mode=llm, cycle=3160ms compile=153ms smoke=6ms llm=3000ms)
-[cycle 12] installed via attempt 1 (mode=llm, cycle=6911ms compile=78ms smoke=5ms llm=6826ms)
-[cycle 13] installed via attempt 1 (mode=llm, cycle=3620ms compile=160ms smoke=2ms llm=3457ms)
-[cycle 14] installed via attempt 1 (mode=llm, cycle=3064ms compile=79ms smoke=2ms llm=2983ms)
-[cycle 15] installed via attempt 1 (mode=llm, cycle=3251ms compile=97ms smoke=2ms llm=3150ms)
-[cycle 16] installed via attempt 1 (mode=llm, cycle=3109ms compile=76ms smoke=6ms llm=3026ms)
-[cycle 17] installed via attempt 1 (mode=llm, cycle=3586ms compile=155ms smoke=2ms llm=3428ms)
-[cycle 18] installed via attempt 1 (mode=llm, cycle=5636ms compile=147ms smoke=2ms llm=5486ms)
-[cycle 19] installed via attempt 1 (mode=llm, cycle=3305ms compile=150ms smoke=6ms llm=3149ms)
-[cycle 20] installed via attempt 1 (mode=llm, cycle=2866ms compile=74ms smoke=16ms llm=2776ms)
-[cycle 21] installed via attempt 1 (mode=llm, cycle=2879ms compile=145ms smoke=7ms llm=2725ms)
-[cycle 22] installed via attempt 1 (mode=llm, cycle=3702ms compile=81ms smoke=2ms llm=3618ms)
-[cycle 23] installed via attempt 1 (mode=llm, cycle=2840ms compile=110ms smoke=3ms llm=2727ms)
-[cycle 24] installed via attempt 1 (mode=llm, cycle=3851ms compile=53ms smoke=1ms llm=3796ms)
+[cycle 14 attempt 1] compile failed:
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:3:48: error: expected class-name before ‘{’ token
+    3 | class CapacityAnchorStrategy : public Strategy {
+      |                                                ^
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:5:5: error: ‘ServerState’ does not name a type
+    5 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:11:39: error: expected ‘)’ before ‘*’ token
+   11 |     CapacityAnchorStrategy(ServerState *srv, int count)
+      |                           ~           ^~
+      |                                       )
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:64:5: error: ‘ServerState’ does not name a type
+   64 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:79:12: error: ‘Strategy’ does not name a type
+   79 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:83:17: error: variable or field ‘destroy_strategy’ declared void
+   83 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:83:34: error: ‘Strategy’ was not declared in this scope
+   83 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:83:44: error: ‘s’ was not declared in this scope
+   83 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
+generator: interrupted, flushing and exiting
+generator: interrupted, flushing and exiting
+[cycle 1] installed via attempt 2 (mode=llm, cycle=7445ms compile=184ms smoke=2ms llm=7258ms)
+[cycle 2] installed via attempt 2 (mode=llm, cycle=11424ms compile=187ms smoke=2ms llm=11232ms)
+[cycle 3] installed via attempt 2 (mode=llm, cycle=13809ms compile=124ms smoke=8ms llm=13676ms)
+[cycle 4] installed via attempt 2 (mode=llm, cycle=5895ms compile=156ms smoke=2ms llm=5736ms)
+[cycle 5] installed via attempt 2 (mode=llm, cycle=10656ms compile=176ms smoke=2ms llm=10477ms)
+[cycle 6] installed via attempt 2 (mode=llm, cycle=9619ms compile=196ms smoke=2ms llm=9419ms)
+[cycle 7] installed via attempt 2 (mode=llm, cycle=11413ms compile=275ms smoke=2ms llm=11134ms)
+[cycle 8] installed via attempt 1 (mode=llm, cycle=3862ms compile=277ms smoke=2ms llm=3582ms)
+[cycle 10] installed via attempt 2 (mode=llm, cycle=13639ms compile=175ms smoke=2ms llm=13460ms)
+[cycle 11] installed via attempt 2 (mode=llm, cycle=13356ms compile=189ms smoke=2ms llm=13163ms)
+[cycle 12] installed via attempt 2 (mode=llm, cycle=8233ms compile=151ms smoke=2ms llm=8078ms)
+[cycle 13] installed via attempt 2 (mode=llm, cycle=13504ms compile=257ms smoke=2ms llm=13244ms)
+[cycle 14] installed via attempt 2 (mode=llm, cycle=9861ms compile=68ms smoke=1ms llm=9790ms)

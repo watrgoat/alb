@@ -19,30 +19,24 @@ public:
     virtual ~Strategy() = default;
 };
 
-class WaterFillingStrategy : public Strategy {
+class CapacityAwareStrategy : public Strategy {
 private:
     ServerState *servers;
     int server_count;
-    uint32_t cumulative_weights[3];
-    uint32_t total_weight;
-    
-    static constexpr uint32_t kWeights[3] = {16665000, 3333000, 16700000};
+    static constexpr uint32_t kWeights[3] = {3333, 3333, 3334};
 
 public:
-    WaterFillingStrategy(ServerState *srv, int count)
-        : servers(srv), server_count(count), total_weight(0) {
-        total_weight = 0;
-        for (int i = 0; i < server_count; ++i) {
-            total_weight += kWeights[i];
-            cumulative_weights[i] = total_weight;
-        }
-    }
+    CapacityAwareStrategy(ServerState *srv, int cnt)
+        : servers(srv), server_count(cnt) {}
 
-    ServerState *select(const StrategyInput &s) override {
-        uint32_t target = s.packet_hash % total_weight;
+    ServerState *select(const StrategyInput &input) override {
+        uint32_t total_weight = kWeights[0] + kWeights[1] + kWeights[2];
+        uint32_t target = input.packet_hash % total_weight;
         
+        uint32_t cumulative = 0;
         for (int i = 0; i < server_count; ++i) {
-            if (target < cumulative_weights[i]) {
+            cumulative += kWeights[i];
+            if (target < cumulative) {
                 return &servers[i];
             }
         }
@@ -52,7 +46,7 @@ public:
 };
 
 extern "C" Strategy *create_strategy(ServerState *servers, int count) {
-    return new WaterFillingStrategy(servers, count);
+    return new CapacityAwareStrategy(servers, count);
 }
 
 extern "C" void destroy_strategy(Strategy *s) {

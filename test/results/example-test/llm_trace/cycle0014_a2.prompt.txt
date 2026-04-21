@@ -1,0 +1,226 @@
+=== SYSTEM ===
+You write C++ load-balancer strategies that get hot-swapped into a live
+packet forwarder. Every cycle you receive a metrics snapshot and must emit
+one self-contained C++ source file implementing the Strategy ABI.
+
+=== WHAT THE SNAPSHOT FIELDS MEAN ===
+
+Each snapshot describes the window since your last strategy was installed:
+
+  current_weights: the integer weight vector the currently-running .so uses
+                   to split traffic (YOUR previous output; on the first cycle,
+                   uniform [1,1,1,...]). Traffic split is w[i]/sum(w).
+  total_inbound_pps: aggregate inbound packet rate entering the LB.
+  backends[i].packets_sent:    how many packets went to backend i this window.
+  backends[i].packets_missed:  how many of those were dropped because backend i
+                               exceeded its capacity. sent-missed = effective.
+  backends[i].capacity_hint:   per-backend processing limit IN PPS — this is
+                               live ground truth, updated every cycle by the
+                               adapter. TRUST IT. At steady state the optimal
+                               split is weights[i] proportional to
+                               capacity_hint[i].
+  backends[i].miss_rate:       packets_missed / packets_sent (0 = healthy,
+                               ~1 = completely overloaded).
+  backends[i].utilization:     packets_sent / (capacity_hint * window_sec)
+                               (<1 headroom; >=1 saturated).
+
+  recent_history: a list of the last few cycles' aggregate stats —
+                  {cycle, weights, per-backend (miss_rate, utilization),
+                  total_miss_rate}. Use this to detect oscillation: if your
+                  previous rewrite made total_miss_rate worse, don't keep
+                  going the same direction.
+
+=== THE ALGORITHM YOU SHOULD IMPLEMENT ===
+
+Anchor on capacity_hint — it's the one-shot optimum at saturation. Then
+clip observed evidence so you never propose a share larger than a
+backend's live cap can absorb.
+
+  window = window_sec
+  cap_budget[i] = max(1, capacity_hint[i] * window)   // packets the
+                                                      // backend can drain
+                                                      // this window
+
+  For each backend i:
+      if miss_rate[i] > 0:
+          // we saw it overflow — two independent upper bounds. take the
+          // stricter: whichever is smaller of (observed effective) and
+          // (cap_budget). This snaps to the real ceiling in one cycle.
+          effective[i] = packets_sent[i] - packets_missed[i]
+          new_weight[i] = min(effective[i], cap_budget[i])
+      else:
+          // healthy — probe up gently, but NEVER above the live cap.
+          // 5% probe (not 10%) because at sum(caps)=inbound, aggressive
+          // probing on one backend forces miss on another.
+          new_weight[i] = min(packets_sent[i] * 1.05, cap_budget[i])
+
+Then renormalize: scale the weight vector so its ratios are preserved
+but sum(new_weight) stays positive and fits in uint32_t. The concrete
+integer values you pick don't matter — only the ratios do.
+
+All weights must be >= 1. If a backend has capacity_hint == 0, set its
+weight to 1 (minimum share; caller may still route a probe packet).
+
+=== SANITY CHECKS BEFORE YOU EMIT ===
+
+Compute the predicted miss under your proposed weights:
+  share[i]         = new_weight[i] / sum(new_weight)
+  predicted_sent_pps[i] = total_inbound_pps * share[i]
+  predicted_miss_pps    = sum(max(0, predicted_sent_pps[i] - capacity_hint[i]))
+
+If predicted_miss_pps > 0.01 * total_inbound_pps AND sum(capacity_hint)
+>= total_inbound_pps (system is NOT over-subscribed), your weights are
+wrong — pull them closer to capacity_hint ratios and re-check.
+
+The OBJECTIVE is to minimize sum(packets_missed) across backends while
+keeping total throughput within 5% of current.
+
+=== CONSTRAINTS (strict) ===
+
+- Include only <cstdint>. No <iostream>, no <thread>, no syscalls, no STL
+  containers, no globals with non-trivial destructors.
+- Implement a class deriving from Strategy with select() overridden.
+- select() must return a pointer inside the servers[] array passed to
+  create_strategy(). Do not allocate per-packet.
+- Export `extern "C" Strategy *create_strategy(ServerState *, int)` and
+  `extern "C" void destroy_strategy(Strategy *)`.
+- Dispatch pattern: `target = packet_hash % total_weight; walk cumulative
+  weights`. This is the canonical shape.
+- Bake the weights into a `constexpr uint32_t kWeights[N]` literal; use
+  those in select(). Do NOT read servers[i].weight — they're uniform and
+  uninformative.
+- Total weight must be positive (sum > 0). All weights must be >= 1.
+
+=== OUTPUT ===
+
+Return ONLY C++ source. No markdown fences, no explanation, no prose.
+
+
+Previous attempt failed to compile:
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:3:48: error: expected class-name before ‘{’ token
+    3 | class CapacityAnchorStrategy : public Strategy {
+      |                                                ^
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:5:5: error: ‘ServerState’ does not name a type
+    5 |     ServerState *servers;
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:11:39: error: expected ‘)’ before ‘*’ token
+   11 |     CapacityAnchorStrategy(ServerState *srv, int count)
+      |                           ~           ^~
+      |                                       )
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:64:5: error: ‘ServerState’ does not name a type
+   64 |     ServerState *select(const StrategyInput &input) override {
+      |     ^~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:79:12: error: ‘Strategy’ does not name a type
+   79 | extern "C" Strategy *create_strategy(ServerState *servers, int count) {
+      |            ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:83:17: error: variable or field ‘destroy_strategy’ declared void
+   83 | extern "C" void destroy_strategy(Strategy *s) {
+      |                 ^~~~~~~~~~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:83:34: error: ‘Strategy’ was not declared in this scope
+   83 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                  ^~~~~~~~
+/tmp/llm-strategy-ej38hz25/strategy_14_1.cpp:83:44: error: ‘s’ was not declared in this scope
+   83 | extern "C" void destroy_strategy(Strategy *s) {
+      |                                            ^
+Fix it.
+
+=== USER ===
+// === Strategy ABI ===
+#pragma once
+#include <cstdint>
+
+/*
+ StrategyInput is an abstract class that handles the inputs. It should include
+all possible needed parameters for every implementation.
+- packet_hash
+- packet_index
+*/
+struct StrategyInput {
+	uint32_t packet_hash;
+	uint32_t packet_index;
+};
+
+/*
+ServerState can have
+- address
+- active connections
+- weight
+*/
+struct ServerState {
+	uint32_t address; // ipv4
+	uint64_t mac;	  // mac
+
+	uint32_t active_connections;
+	uint32_t weight;
+};
+
+class Strategy
+{
+      public:
+	virtual ServerState *select(const StrategyInput &s) = 0;
+	// virtual void update() = 0; // TODO: Implement program->lib update
+	// communication
+	virtual ~Strategy() = default;
+};
+
+extern "C" Strategy *create_strategy(ServerState *servers, int count);
+extern "C" void destroy_strategy(Strategy *s);
+
+// === latest metrics snapshot ===
+{
+  "timestamp": 1776786389,
+  "window_sec": 5.0,
+  "current_weights": [
+    3290,
+    3330,
+    3380
+  ],
+  "total_inbound_pps": 10000000,
+  "backends": [
+    {
+      "idx": 0,
+      "ip": "192.168.1.100",
+      "packets_sent": 16450000,
+      "packets_missed": 0,
+      "active_connections": 0,
+      "capacity_hint": 3333000,
+      "miss_rate": 0.0,
+      "utilization": 0.9871,
+      "weight_share": 0.329,
+      "latency_us": 23.26
+    },
+    {
+      "idx": 1,
+      "ip": "192.168.1.101",
+      "packets_sent": 16650000,
+      "packets_missed": 0,
+      "active_connections": 0,
+      "capacity_hint": 3333000,
+      "miss_rate": 0.0,
+      "utilization": 0.9991,
+      "weight_share": 0.333,
+      "latency_us": 30.0
+    },
+    {
+      "idx": 2,
+      "ip": "192.168.1.102",
+      "packets_sent": 16900000,
+      "packets_missed": 230005,
+      "active_connections": 0,
+      "capacity_hint": 3333999,
+      "miss_rate": 0.0136,
+      "utilization": 1.0138,
+      "weight_share": 0.338,
+      "latency_us": 29.99
+    }
+  ]
+}
+
+// === recent cycles (oldest first, this cycle not included) ===
+cycle=  8 weights=[4960, 1654, 3386] total_miss=0.006  b0(mr=0.002,u=1.00) b1(mr=0.000,u=0.97) b2(mr=0.014,u=1.01)
+cycle= 10 weights=[4973, 1593, 3434] total_miss=0.005  b0(mr=0.000,u=0.99) b1(mr=0.000,u=0.99) b2(mr=0.016,u=1.02)
+cycle= 11 weights=[3310, 3271, 3419] total_miss=0.174  b0(mr=0.330,u=1.49) b1(mr=0.000,u=0.48) b2(mr=0.029,u=1.03)
+cycle= 12 weights=[3290, 3330, 3380] total_miss=0.009  b0(mr=0.000,u=0.99) b1(mr=0.000,u=0.98) b2(mr=0.025,u=1.03)
+cycle= 13 weights=[3290, 3330, 3380] total_miss=0.005  b0(mr=0.000,u=0.99) b1(mr=0.000,u=1.00) b2(mr=0.014,u=1.01)
+
+Write the new Strategy source file now.

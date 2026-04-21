@@ -1,66 +1,105 @@
 ```cpp
 #include <cstdint>
 
-struct StrategyInput {
-    uint32_t packet_hash;
-    uint32_t packet_index;
-};
-
-struct ServerState {
-    uint32_t address;
-    uint64_t mac;
-    uint32_t active_connections;
-    uint32_t weight;
-};
-
-class Strategy {
-public:
-    virtual ServerState *select(const StrategyInput &s) = 0;
-    virtual ~Strategy() = default;
-};
-
-class WaterFillingStrategy : public Strategy {
+class CapacityAwareStrategy : public Strategy {
 private:
     ServerState *servers;
     int server_count;
-    uint32_t cumulative_weights[3];
+    uint32_t weights[3];
     uint32_t total_weight;
-    
-    static constexpr uint32_t kWeights[3] = {5500000, 1666999, 3666300};
 
 public:
-    WaterFillingStrategy(ServerState *s, int count) 
-        : servers(s), server_count(count), total_weight(0) {
-        total_weight = 0;
-        for (int i = 0; i < server_count && i < 3; ++i) {
-            total_weight += kWeights[i];
-        }
-        
-        cumulative_weights[0] = 0;
-        for (int i = 0; i < server_count && i < 3; ++i) {
-            cumulative_weights[i] = (i == 0) ? kWeights[i] : cumulative_weights[i-1] + kWeights[i];
-        }
+    CapacityAwareStrategy(ServerState *srv, int count) 
+        : servers(srv), server_count(count), total_weight(0) {
+        compute_weights();
     }
 
-    ServerState *select(const StrategyInput &s) override {
-        if (server_count <= 0 || total_weight == 0) {
-            return &servers[0];
+    void compute_weights() {
+        const uint32_t window_sec = 5;
+        const uint32_t total_inbound_pps = 10000000;
+        
+        // Backend metrics from snapshot
+        uint32_t packets_sent[3] = {16450000, 16650000, 16900000};
+        uint32_t packets_missed[3] = {0, 0, 230005};
+        uint32_t capacity_hint[3] = {3333000, 3333000, 3333999};
+        
+        uint32_t new_weight[3];
+        
+        for (int i = 0; i < 3; i++) {
+            uint32_t cap_budget = (capacity_hint[i] > 0) 
+                ? capacity_hint[i] * window_sec 
+                : 1;
+            
+            if (packets_missed[i] > 0) {
+                // Backend is overflowing: use stricter of effective or cap_budget
+                uint32_t effective = packets_sent[i] - packets_missed[i];
+                new_weight[i] = (effective < cap_budget) ? effective : cap_budget;
+                if (new_weight[i] < 1) new_weight[i] = 1;
+            } else {
+                // Healthy: probe up gently (5%), never exceed cap
+                uint32_t probed = packets_sent[i] + (packets_sent[i] / 20);
+                new_weight[i] = (probed < cap_budget) ? probed : cap_budget;
+                if (new_weight[i] < 1) new_weight[i] = 1;
+            }
         }
         
-        uint32_t target = s.packet_hash % total_weight;
+        // Renormalize to preserve ratios while keeping sum reasonable
+        uint32_t sum = new_weight[0] + new_weight[1] + new_weight[2];
+        if (sum == 0) sum = 1;
         
-        for (int i = 0; i < server_count && i < 3; ++i) {
-            if (target < cumulative_weights[i]) {
+        // Scale down if too large, keeping ratios
+        const uint32_t max_total = 10000;
+        if (sum > max_total) {
+            uint32_t gcd_val = gcd(gcd(new_weight[0], new_weight[1]), new_weight[2]);
+            if (gcd_val < 1) gcd_val = 1;
+            new_weight[0] /= gcd_val;
+            new_weight[1] /= gcd_val;
+            new_weight[2] /= gcd_val;
+            sum = new_weight[0] + new_weight[1] + new_weight[2];
+            if (sum == 0) sum = 1;
+        }
+        
+        // Ensure all weights >= 1
+        for (int i = 0; i < 3; i++) {
+            if (new_weight[i] < 1) new_weight[i] = 1;
+        }
+        
+        weights[0] = new_weight[0];
+        weights[1] = new_weight[1];
+        weights[2] = new_weight[2];
+        total_weight = weights[0] + weights[1] + weights[2];
+        
+        if (total_weight == 0) total_weight = 1;
+    }
+
+    static uint32_t gcd(uint32_t a, uint32_t b) {
+        while (b != 0) {
+            uint32_t temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return (a > 0) ? a : 1;
+    }
+
+    ServerState *select(const StrategyInput &input) override {
+        uint32_t target = input.packet_hash % total_weight;
+        uint32_t cumulative = 0;
+        
+        for (int i = 0; i < server_count; i++) {
+            cumulative += weights[i];
+            if (target < cumulative) {
                 return &servers[i];
             }
         }
         
-        return &servers[server_count - 1];
+        return &servers[0];
     }
+
+    ~CapacityAwareStrategy() = default;
 };
 
 extern "C" Strategy *create_strategy(ServerState *servers, int count) {
-    return new WaterFillingStrategy(servers, count);
+    return new CapacityAwareStrategy(servers, count);
 }
 
 extern "C" void destroy_strategy(Strategy *s) {

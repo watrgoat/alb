@@ -27,473 +27,451 @@ port 0  rx 0 pps  tx 0 pps  imissed 0  ierrors 0
 port 1  rx 0 pps  tx 0 pps  imissed 0  ierrors 0
 port 0  rx 0 pps  tx 0 pps  imissed 0  ierrors 0
 port 1  rx 0 pps  tx 0 pps  imissed 0  ierrors 0
-port 0  rx 3698877 pps  tx 0 pps  imissed 7815098  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3693648 pps  imissed 0  ierrors 0
-port 0  rx 4094689 pps  tx 0 pps  imissed 8664395  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4093265 pps  imissed 0  ierrors 0
-port 0  rx 4098952 pps  tx 0 pps  imissed 8662258  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4097427 pps  imissed 0  ierrors 0
-port 0  rx 4104937 pps  tx 0 pps  imissed 8656672  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4103033 pps  imissed 0  ierrors 0
-port 0  rx 4075695 pps  tx 0 pps  imissed 8683836  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4075780 pps  imissed 0  ierrors 0
-port 0  rx 4077113 pps  tx 0 pps  imissed 8685676  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4074841 pps  imissed 0  ierrors 0
-port 0  rx 4050225 pps  tx 0 pps  imissed 8708745  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4050148 pps  imissed 0  ierrors 0
+port 0  rx 3693363 pps  tx 0 pps  imissed 7744079  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 3687653 pps  imissed 0  ierrors 0
+port 0  rx 4120847 pps  tx 0 pps  imissed 8641605  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4119460 pps  imissed 0  ierrors 0
+port 0  rx 4102930 pps  tx 0 pps  imissed 8656085  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4101927 pps  imissed 0  ierrors 0
+port 0  rx 4111956 pps  tx 0 pps  imissed 8648896  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4110022 pps  imissed 0  ierrors 0
+port 0  rx 4092421 pps  tx 0 pps  imissed 8667493  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091228 pps  imissed 0  ierrors 0
+port 0  rx 4088319 pps  tx 0 pps  imissed 8672845  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4087548 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 4068306 pps  tx 0 pps  imissed 8691765  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4066596 pps  imissed 0  ierrors 0
-port 0  rx 4090738 pps  tx 0 pps  imissed 8671573  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4087324 pps  imissed 0  ierrors 0
-port 0  rx 4098041 pps  tx 0 pps  imissed 8662861  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4096705 pps  imissed 0  ierrors 0
-port 0  rx 4066484 pps  tx 0 pps  imissed 8692484  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4066251 pps  imissed 0  ierrors 0
-port 0  rx 4089685 pps  tx 0 pps  imissed 8670347  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4088635 pps  imissed 0  ierrors 0
-port 0  rx 4092771 pps  tx 0 pps  imissed 8667285  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4091795 pps  imissed 0  ierrors 0
-port 0  rx 4071233 pps  tx 0 pps  imissed 8688906  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4069924 pps  imissed 0  ierrors 0
-port 0  rx 4066618 pps  tx 0 pps  imissed 8693432  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4064842 pps  imissed 0  ierrors 0
+port 0  rx 4132446 pps  tx 0 pps  imissed 8627839  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4130260 pps  imissed 0  ierrors 0
+port 0  rx 4073108 pps  tx 0 pps  imissed 8688921  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4071397 pps  imissed 0  ierrors 0
+port 0  rx 4103083 pps  tx 0 pps  imissed 8656028  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4103009 pps  imissed 0  ierrors 0
+port 0  rx 4115545 pps  tx 0 pps  imissed 8644502  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4114440 pps  imissed 0  ierrors 0
+port 0  rx 4103174 pps  tx 0 pps  imissed 8658876  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100738 pps  imissed 0  ierrors 0
+port 0  rx 4121634 pps  tx 0 pps  imissed 8637285  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4120155 pps  imissed 0  ierrors 0
+port 0  rx 4110455 pps  tx 0 pps  imissed 8650312  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4109335 pps  imissed 0  ierrors 0
+port 0  rx 4120368 pps  tx 0 pps  imissed 8639676  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4118980 pps  imissed 0  ierrors 0
+port 0  rx 4102410 pps  tx 0 pps  imissed 8660940  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100199 pps  imissed 0  ierrors 0
+port 0  rx 4093068 pps  tx 0 pps  imissed 8665872  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4092574 pps  imissed 0  ierrors 0
+port 0  rx 4100893 pps  tx 0 pps  imissed 8661504  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4099320 pps  imissed 0  ierrors 0
+port 0  rx 4129966 pps  tx 0 pps  imissed 8628945  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4128677 pps  imissed 1  ierrors 0
+port 0  rx 4085681 pps  tx 0 pps  imissed 8674671  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4084631 pps  imissed 0  ierrors 0
+port 0  rx 4104163 pps  tx 0 pps  imissed 8656244  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4102199 pps  imissed 0  ierrors 0
+port 0  rx 4102211 pps  tx 0 pps  imissed 8658045  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100470 pps  imissed 0  ierrors 0
+port 0  rx 4101382 pps  tx 0 pps  imissed 8659098  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100090 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 4103113 pps  tx 0 pps  imissed 8658924  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4099260 pps  imissed 0  ierrors 0
-port 0  rx 4094925 pps  tx 0 pps  imissed 8664093  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4093372 pps  imissed 0  ierrors 0
-port 0  rx 4092901 pps  tx 0 pps  imissed 8667301  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4091771 pps  imissed 0  ierrors 0
-port 0  rx 4076696 pps  tx 0 pps  imissed 8683381  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4075423 pps  imissed 0  ierrors 0
-port 0  rx 4084490 pps  tx 0 pps  imissed 8676629  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4082789 pps  imissed 0  ierrors 0
-port 0  rx 4084009 pps  tx 0 pps  imissed 8675501  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4083075 pps  imissed 0  ierrors 0
-port 0  rx 4095322 pps  tx 0 pps  imissed 8666067  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4094238 pps  imissed 0  ierrors 0
-port 0  rx 4075842 pps  tx 0 pps  imissed 8684196  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4074418 pps  imissed 0  ierrors 0
-port 0  rx 4067110 pps  tx 0 pps  imissed 8692703  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4066543 pps  imissed 0  ierrors 0
+port 0  rx 4126784 pps  tx 0 pps  imissed 8633292  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4125145 pps  imissed 0  ierrors 0
+port 0  rx 4098681 pps  tx 0 pps  imissed 8661303  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4097408 pps  imissed 0  ierrors 0
+port 0  rx 4100104 pps  tx 0 pps  imissed 8660890  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4099003 pps  imissed 0  ierrors 0
+port 0  rx 4090538 pps  tx 0 pps  imissed 8669580  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4089572 pps  imissed 0  ierrors 0
+port 0  rx 4092468 pps  tx 0 pps  imissed 8668005  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091142 pps  imissed 0  ierrors 0
+port 0  rx 4116743 pps  tx 0 pps  imissed 8645679  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4114304 pps  imissed 0  ierrors 0
+port 0  rx 4112453 pps  tx 0 pps  imissed 8648282  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4111192 pps  imissed 0  ierrors 0
+port 0  rx 4103895 pps  tx 0 pps  imissed 8655180  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4104153 pps  imissed 0  ierrors 0
+port 0  rx 4097535 pps  tx 0 pps  imissed 8662628  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4096324 pps  imissed 0  ierrors 0
+port 0  rx 4116856 pps  tx 0 pps  imissed 8644019  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4116362 pps  imissed 0  ierrors 0
+port 0  rx 4103022 pps  tx 0 pps  imissed 8658132  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4101295 pps  imissed 0  ierrors 0
+port 0  rx 4114257 pps  tx 0 pps  imissed 8646117  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4113179 pps  imissed 0  ierrors 0
+port 0  rx 4110951 pps  tx 0 pps  imissed 8649387  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4109296 pps  imissed 0  ierrors 0
+port 0  rx 4103491 pps  tx 0 pps  imissed 8656815  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4102559 pps  imissed 0  ierrors 0
+port 0  rx 4094465 pps  tx 0 pps  imissed 8665751  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4092926 pps  imissed 0  ierrors 0
+port 0  rx 4104696 pps  tx 0 pps  imissed 8655443  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4103435 pps  imissed 0  ierrors 0
+port 0  rx 4114872 pps  tx 0 pps  imissed 8647304  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4111844 pps  imissed 0  ierrors 0
+port 0  rx 4094874 pps  tx 0 pps  imissed 8664167  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4094577 pps  imissed 0  ierrors 0
+port 0  rx 4094930 pps  tx 0 pps  imissed 8665346  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4093617 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 4078244 pps  tx 0 pps  imissed 8682372  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4077010 pps  imissed 0  ierrors 0
-port 0  rx 4061354 pps  tx 0 pps  imissed 8700317  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4060097 pps  imissed 0  ierrors 0
-port 0  rx 4076583 pps  tx 0 pps  imissed 8683222  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4075153 pps  imissed 0  ierrors 0
-port 0  rx 4076745 pps  tx 0 pps  imissed 8685606  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4074598 pps  imissed 0  ierrors 0
-port 0  rx 4084028 pps  tx 0 pps  imissed 8675171  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4083592 pps  imissed 0  ierrors 0
-port 0  rx 4055908 pps  tx 0 pps  imissed 8704706  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4055217 pps  imissed 0  ierrors 0
-port 0  rx 4064136 pps  tx 0 pps  imissed 8650086  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4062490 pps  imissed 0  ierrors 0
-port 0  rx 4069948 pps  tx 0 pps  imissed 8690343  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4069226 pps  imissed 0  ierrors 0
-port 0  rx 4075202 pps  tx 0 pps  imissed 8687325  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4073541 pps  imissed 0  ierrors 0
+port 0  rx 4112861 pps  tx 0 pps  imissed 8647228  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4110993 pps  imissed 0  ierrors 0
+port 0  rx 4107574 pps  tx 0 pps  imissed 8653153  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4106469 pps  imissed 0  ierrors 0
+port 0  rx 4106862 pps  tx 0 pps  imissed 8653801  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4105997 pps  imissed 0  ierrors 0
+port 0  rx 4094508 pps  tx 0 pps  imissed 8666216  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091623 pps  imissed 0  ierrors 0
+port 0  rx 4092816 pps  tx 0 pps  imissed 8666734  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4094416 pps  imissed 0  ierrors 0
+port 0  rx 4105950 pps  tx 0 pps  imissed 8654393  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4103887 pps  imissed 0  ierrors 0
+port 0  rx 4094408 pps  tx 0 pps  imissed 8665768  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4092968 pps  imissed 1  ierrors 0
+port 0  rx 4092444 pps  tx 0 pps  imissed 8668353  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091175 pps  imissed 0  ierrors 0
+port 0  rx 4132327 pps  tx 0 pps  imissed 8629206  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4128932 pps  imissed 0  ierrors 0
+port 0  rx 4097642 pps  tx 0 pps  imissed 8661699  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4097266 pps  imissed 0  ierrors 0
+port 0  rx 4095963 pps  tx 0 pps  imissed 8664236  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4095023 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 4103301 pps  tx 0 pps  imissed 8656886  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4102387 pps  imissed 0  ierrors 0
-port 0  rx 4075866 pps  tx 0 pps  imissed 8684191  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4075135 pps  imissed 0  ierrors 0
-port 0  rx 4065312 pps  tx 0 pps  imissed 8695246  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4064236 pps  imissed 0  ierrors 0
-port 0  rx 4087566 pps  tx 0 pps  imissed 8673239  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4086656 pps  imissed 0  ierrors 0
-port 0  rx 4084175 pps  tx 0 pps  imissed 8676008  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4082640 pps  imissed 0  ierrors 0
-port 0  rx 4076101 pps  tx 0 pps  imissed 8686639  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4073725 pps  imissed 0  ierrors 0
-port 0  rx 4086151 pps  tx 0 pps  imissed 8672973  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4085810 pps  imissed 0  ierrors 0
-port 0  rx 4067146 pps  tx 0 pps  imissed 8692926  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4066018 pps  imissed 0  ierrors 0
-port 0  rx 4095138 pps  tx 0 pps  imissed 8665399  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4093749 pps  imissed 0  ierrors 0
-port 0  rx 4070971 pps  tx 0 pps  imissed 8688796  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4069338 pps  imissed 0  ierrors 0
-port 0  rx 4080679 pps  tx 0 pps  imissed 8679782  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4079850 pps  imissed 0  ierrors 0
-port 0  rx 4076024 pps  tx 0 pps  imissed 8684085  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4075072 pps  imissed 0  ierrors 0
-port 0  rx 4077993 pps  tx 0 pps  imissed 8682430  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4076838 pps  imissed 0  ierrors 0
-port 0  rx 4094257 pps  tx 0 pps  imissed 8667836  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4092240 pps  imissed 0  ierrors 0
+port 0  rx 4107556 pps  tx 0 pps  imissed 8652931  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4106300 pps  imissed 0  ierrors 0
+port 0  rx 4097866 pps  tx 0 pps  imissed 8663368  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4095467 pps  imissed 0  ierrors 0
+port 0  rx 4109258 pps  tx 0 pps  imissed 8651269  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4109206 pps  imissed 0  ierrors 0
+port 0  rx 4113976 pps  tx 0 pps  imissed 8647770  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4111989 pps  imissed 0  ierrors 0
+port 0  rx 4134634 pps  tx 0 pps  imissed 8624170  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4134647 pps  imissed 0  ierrors 0
+port 0  rx 4144459 pps  tx 0 pps  imissed 8615860  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4142665 pps  imissed 0  ierrors 0
+port 0  rx 4106728 pps  tx 0 pps  imissed 8653618  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4106088 pps  imissed 0  ierrors 0
+port 0  rx 4099539 pps  tx 0 pps  imissed 8662704  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4098006 pps  imissed 0  ierrors 0
+port 0  rx 4108787 pps  tx 0 pps  imissed 8649921  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4108068 pps  imissed 0  ierrors 0
+port 0  rx 4102856 pps  tx 0 pps  imissed 8659882  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100544 pps  imissed 0  ierrors 0
+port 0  rx 4100954 pps  tx 0 pps  imissed 8659805  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100280 pps  imissed 0  ierrors 0
+port 0  rx 4137716 pps  tx 0 pps  imissed 8621154  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4136629 pps  imissed 0  ierrors 0
+port 0  rx 4124884 pps  tx 0 pps  imissed 8637441  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4122431 pps  imissed 0  ierrors 0
+port 0  rx 4106545 pps  tx 0 pps  imissed 8653747  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4104531 pps  imissed 0  ierrors 0
+port 0  rx 4104275 pps  tx 0 pps  imissed 8656105  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4103488 pps  imissed 0  ierrors 0
+port 0  rx 4114799 pps  tx 0 pps  imissed 8646028  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4113561 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 4116661 pps  tx 0 pps  imissed 8642398  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4115326 pps  imissed 0  ierrors 0
-port 0  rx 4092793 pps  tx 0 pps  imissed 8669228  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4091166 pps  imissed 0  ierrors 0
-port 0  rx 4086772 pps  tx 0 pps  imissed 8673557  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4085665 pps  imissed 0  ierrors 0
-port 0  rx 4071034 pps  tx 0 pps  imissed 8688947  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4069960 pps  imissed 0  ierrors 0
-port 0  rx 4077738 pps  tx 0 pps  imissed 8682456  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4076477 pps  imissed 0  ierrors 0
-port 0  rx 4082818 pps  tx 0 pps  imissed 8678934  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4081040 pps  imissed 0  ierrors 0
-port 0  rx 4086047 pps  tx 0 pps  imissed 8676014  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 4084601 pps  imissed 0  ierrors 0
-port 0  rx 3946535 pps  tx 0 pps  imissed 8814970  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3944278 pps  imissed 2  ierrors 0
-port 0  rx 3771577 pps  tx 0 pps  imissed 8989359  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3771018 pps  imissed 2  ierrors 0
+port 0  rx 4114089 pps  tx 0 pps  imissed 8645999  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4113442 pps  imissed 0  ierrors 0
+port 0  rx 4090106 pps  tx 0 pps  imissed 8669722  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4089141 pps  imissed 0  ierrors 0
+port 0  rx 4105394 pps  tx 0 pps  imissed 8654879  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4103961 pps  imissed 0  ierrors 0
+port 0  rx 4092203 pps  tx 0 pps  imissed 8668115  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091145 pps  imissed 0  ierrors 0
+port 0  rx 4105813 pps  tx 0 pps  imissed 8655973  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4104802 pps  imissed 0  ierrors 0
+port 0  rx 4102769 pps  tx 0 pps  imissed 8657317  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100625 pps  imissed 0  ierrors 0
+port 0  rx 4090497 pps  tx 0 pps  imissed 8671930  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4088850 pps  imissed 0  ierrors 0
+port 0  rx 4098339 pps  tx 0 pps  imissed 8661745  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4097247 pps  imissed 0  ierrors 0
+port 0  rx 4103355 pps  tx 0 pps  imissed 8657981  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4102700 pps  imissed 0  ierrors 0
+port 0  rx 4091465 pps  tx 0 pps  imissed 8667950  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4090119 pps  imissed 1  ierrors 0
+port 0  rx 4098419 pps  tx 0 pps  imissed 8661618  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4097325 pps  imissed 0  ierrors 0
+port 0  rx 4093511 pps  tx 0 pps  imissed 8666641  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4092831 pps  imissed 0  ierrors 0
+port 0  rx 4113162 pps  tx 0 pps  imissed 8646913  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4111263 pps  imissed 0  ierrors 0
+port 0  rx 4084718 pps  tx 0 pps  imissed 8675578  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4083671 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 3751374 pps  tx 0 pps  imissed 9007572  ierrors 0  [0,0,0,0]
-port 1  rx 2 pps  tx 3752427 pps  imissed 2  ierrors 0  [0,0,0,0]
-port 0  rx 3768402 pps  tx 0 pps  imissed 8992838  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768527 pps  imissed 1  ierrors 0
-port 0  rx 3763724 pps  tx 0 pps  imissed 8997303  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3763472 pps  imissed 1  ierrors 0
-port 0  rx 3776827 pps  tx 0 pps  imissed 8984504  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3776655 pps  imissed 0  ierrors 0
-port 0  rx 3771093 pps  tx 0 pps  imissed 8990695  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770955 pps  imissed 1  ierrors 0
-port 0  rx 3782949 pps  tx 0 pps  imissed 8978806  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3781365 pps  imissed 1  ierrors 0
-port 0  rx 3764272 pps  tx 0 pps  imissed 8994933  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3765733 pps  imissed 0  ierrors 0
-port 0  rx 3774485 pps  tx 0 pps  imissed 8986127  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774041 pps  imissed 0  ierrors 0
-port 0  rx 3775035 pps  tx 0 pps  imissed 8985348  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774993 pps  imissed 0  ierrors 0
+port 0  rx 4112893 pps  tx 0 pps  imissed 8648609  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4111653 pps  imissed 0  ierrors 0
+port 0  rx 4111464 pps  tx 0 pps  imissed 8649728  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4109598 pps  imissed 0  ierrors 0
+port 0  rx 4089895 pps  tx 0 pps  imissed 8669229  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4089931 pps  imissed 0  ierrors 0
+port 0  rx 4094184 pps  tx 0 pps  imissed 8665875  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4092735 pps  imissed 0  ierrors 0
+port 0  rx 4100590 pps  tx 0 pps  imissed 8661617  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4098793 pps  imissed 0  ierrors 0
+port 0  rx 4080634 pps  tx 0 pps  imissed 8678292  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4080801 pps  imissed 0  ierrors 0
+port 0  rx 4079926 pps  tx 0 pps  imissed 8680197  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4078686 pps  imissed 0  ierrors 0
+port 0  rx 4105448 pps  tx 0 pps  imissed 8654544  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4103328 pps  imissed 0  ierrors 0
+port 0  rx 4077363 pps  tx 0 pps  imissed 8682810  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4077075 pps  imissed 0  ierrors 0
+port 0  rx 4101658 pps  tx 0 pps  imissed 8658687  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100709 pps  imissed 0  ierrors 0
+port 0  rx 4101199 pps  tx 0 pps  imissed 8659040  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100467 pps  imissed 0  ierrors 0
+port 0  rx 4104626 pps  tx 0 pps  imissed 8655872  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4104029 pps  imissed 0  ierrors 0
+port 0  rx 4120134 pps  tx 0 pps  imissed 8640898  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4119459 pps  imissed 0  ierrors 0
+port 0  rx 4118487 pps  tx 0 pps  imissed 8641551  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4117452 pps  imissed 0  ierrors 0
+port 0  rx 4099761 pps  tx 0 pps  imissed 8660475  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4099011 pps  imissed 0  ierrors 0
+port 0  rx 4093281 pps  tx 0 pps  imissed 8667662  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091690 pps  imissed 0  ierrors 0
+port 0  rx 4090383 pps  tx 0 pps  imissed 8672704  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4088569 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 3770915 pps  tx 0 pps  imissed 8989456  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769872 pps  imissed 0  ierrors 0
-port 0  rx 3766474 pps  tx 0 pps  imissed 8994419  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767497 pps  imissed 0  ierrors 0
-port 0  rx 3770532 pps  tx 0 pps  imissed 8990574  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769903 pps  imissed 1  ierrors 0
-port 0  rx 3767010 pps  tx 0 pps  imissed 8996001  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766007 pps  imissed 0  ierrors 0
-port 0  rx 3769789 pps  tx 0 pps  imissed 8989493  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770259 pps  imissed 1  ierrors 0
-port 0  rx 3773448 pps  tx 0 pps  imissed 8987207  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773537 pps  imissed 0  ierrors 0
-port 0  rx 3774757 pps  tx 0 pps  imissed 8988385  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773045 pps  imissed 0  ierrors 0
-port 0  rx 3770170 pps  tx 0 pps  imissed 8988977  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3771433 pps  imissed 0  ierrors 0
-port 0  rx 3764170 pps  tx 0 pps  imissed 8996116  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3764134 pps  imissed 0  ierrors 0
+port 0  rx 4128092 pps  tx 0 pps  imissed 8632977  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4126894 pps  imissed 0  ierrors 0
+port 0  rx 4092797 pps  tx 0 pps  imissed 8666360  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4093429 pps  imissed 0  ierrors 0
+port 0  rx 4094269 pps  tx 0 pps  imissed 8666819  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4093046 pps  imissed 0  ierrors 0
+port 0  rx 4098320 pps  tx 0 pps  imissed 8664293  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4096483 pps  imissed 0  ierrors 0
+port 0  rx 4070212 pps  tx 0 pps  imissed 8688866  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4070268 pps  imissed 0  ierrors 0
+port 0  rx 4110133 pps  tx 0 pps  imissed 8650785  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4108905 pps  imissed 0  ierrors 0
+port 0  rx 4089117 pps  tx 0 pps  imissed 8671177  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4087897 pps  imissed 0  ierrors 0
+port 0  rx 4104553 pps  tx 0 pps  imissed 8655466  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4102680 pps  imissed 0  ierrors 0
+port 0  rx 4074834 pps  tx 0 pps  imissed 8685308  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4073782 pps  imissed 1  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 3774552 pps  tx 0 pps  imissed 8985912  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774147 pps  imissed 0  ierrors 0
-port 0  rx 3764971 pps  tx 0 pps  imissed 8995396  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3764950 pps  imissed 0  ierrors 0
-port 0  rx 3776193 pps  tx 0 pps  imissed 8987417  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774845 pps  imissed 0  ierrors 0
-port 0  rx 3765743 pps  tx 0 pps  imissed 8993433  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766567 pps  imissed 0  ierrors 0
-port 0  rx 3766134 pps  tx 0 pps  imissed 8994405  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766090 pps  imissed 0  ierrors 0
-port 0  rx 3763421 pps  tx 0 pps  imissed 8997005  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3763413 pps  imissed 0  ierrors 0
-port 0  rx 3773511 pps  tx 0 pps  imissed 8987324  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3772195 pps  imissed 0  ierrors 0
-port 0  rx 3767267 pps  tx 0 pps  imissed 8993656  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768550 pps  imissed 1  ierrors 0
-port 0  rx 3770484 pps  tx 0 pps  imissed 8990322  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770165 pps  imissed 0  ierrors 0
-port 0  rx 3765304 pps  tx 0 pps  imissed 8995321  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3765259 pps  imissed 0  ierrors 0
+port 0  rx 4099121 pps  tx 0 pps  imissed 8661204  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4097078 pps  imissed 0  ierrors 0
+port 0  rx 4078607 pps  tx 0 pps  imissed 8681471  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4077739 pps  imissed 0  ierrors 0
+port 0  rx 4107307 pps  tx 0 pps  imissed 8653280  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4106287 pps  imissed 0  ierrors 0
+port 0  rx 4086734 pps  tx 0 pps  imissed 8673364  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4085315 pps  imissed 0  ierrors 0
+port 0  rx 4106274 pps  tx 0 pps  imissed 8653828  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4104780 pps  imissed 0  ierrors 0
+port 0  rx 4097568 pps  tx 0 pps  imissed 8661950  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4095913 pps  imissed 0  ierrors 0
+port 0  rx 4108230 pps  tx 0 pps  imissed 8651674  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4105929 pps  imissed 0  ierrors 0
+port 0  rx 4091885 pps  tx 0 pps  imissed 8668975  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4090169 pps  imissed 0  ierrors 0
+port 0  rx 4089192 pps  tx 0 pps  imissed 8670587  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4088384 pps  imissed 0  ierrors 0
+port 0  rx 4118333 pps  tx 0 pps  imissed 8641973  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4117078 pps  imissed 0  ierrors 0
+port 0  rx 4108357 pps  tx 0 pps  imissed 8653386  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4105836 pps  imissed 0  ierrors 0
+port 0  rx 4110122 pps  tx 0 pps  imissed 8650348  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4107309 pps  imissed 0  ierrors 0
+port 0  rx 4091373 pps  tx 0 pps  imissed 8667186  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091756 pps  imissed 0  ierrors 0
+port 0  rx 4088744 pps  tx 0 pps  imissed 8671403  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4087996 pps  imissed 0  ierrors 0
+port 0  rx 4091821 pps  tx 0 pps  imissed 8669139  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4090410 pps  imissed 0  ierrors 0
+port 0  rx 4124994 pps  tx 0 pps  imissed 8588767  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4120508 pps  imissed 0  ierrors 0
+port 0  rx 4087439 pps  tx 0 pps  imissed 8672829  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4085931 pps  imissed 0  ierrors 0
+port 0  rx 4099202 pps  tx 0 pps  imissed 8614670  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4095651 pps  imissed 0  ierrors 0
+port 0  rx 4101396 pps  tx 0 pps  imissed 8659021  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4099819 pps  imissed 0  ierrors 0
+port 0  rx 4085172 pps  tx 0 pps  imissed 8676348  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4084790 pps  imissed 0  ierrors 0
+port 0  rx 4106717 pps  tx 0 pps  imissed 8653407  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4105528 pps  imissed 0  ierrors 0
+port 0  rx 4104932 pps  tx 0 pps  imissed 8655448  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4103824 pps  imissed 0  ierrors 0
+port 0  rx 4097962 pps  tx 0 pps  imissed 8662067  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4096629 pps  imissed 0  ierrors 0
+port 0  rx 4085586 pps  tx 0 pps  imissed 8676625  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4084688 pps  imissed 0  ierrors 0
+port 0  rx 4108111 pps  tx 0 pps  imissed 8651436  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4107644 pps  imissed 0  ierrors 0
+port 0  rx 4099351 pps  tx 0 pps  imissed 8661174  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4098361 pps  imissed 0  ierrors 0
+port 0  rx 4104752 pps  tx 0 pps  imissed 8654834  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4102826 pps  imissed 0  ierrors 0
+port 0  rx 4088028 pps  tx 0 pps  imissed 8672355  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4088206 pps  imissed 0  ierrors 0
+port 0  rx 4125283 pps  tx 0 pps  imissed 8635554  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4122138 pps  imissed 0  ierrors 0
+port 0  rx 4132311 pps  tx 0 pps  imissed 8628701  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4092192 pps  imissed 0  ierrors 0
+port 0  rx 4180870 pps  tx 0 pps  imissed 8592496  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4177500 pps  imissed 0  ierrors 0
+port 0  rx 4203522 pps  tx 0 pps  imissed 8551342  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4200767 pps  imissed 0  ierrors 0
+port 0  rx 4124104 pps  tx 0 pps  imissed 8635904  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4122155 pps  imissed 0  ierrors 0
+port 0  rx 4202231 pps  tx 0 pps  imissed 8557559  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4200923 pps  imissed 0  ierrors 0
+port 0  rx 4102151 pps  tx 0 pps  imissed 8658734  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100591 pps  imissed 0  ierrors 0
+port 0  rx 4086467 pps  tx 0 pps  imissed 8675337  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4083740 pps  imissed 0  ierrors 0
+port 0  rx 4107842 pps  tx 0 pps  imissed 8651226  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4107113 pps  imissed 0  ierrors 0
+port 0  rx 4083562 pps  tx 0 pps  imissed 8677113  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4082014 pps  imissed 0  ierrors 0
+port 0  rx 4091984 pps  tx 0 pps  imissed 8670678  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4090740 pps  imissed 0  ierrors 0
+port 0  rx 4130982 pps  tx 0 pps  imissed 8628109  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4130486 pps  imissed 0  ierrors 0
+port 0  rx 4063902 pps  tx 0 pps  imissed 8697655  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4061735 pps  imissed 0  ierrors 0
+port 0  rx 4069139 pps  tx 0 pps  imissed 8690110  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4069246 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 3767786 pps  tx 0 pps  imissed 8994100  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766414 pps  imissed 0  ierrors 0
-port 0  rx 3767720 pps  tx 0 pps  imissed 8991548  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767909 pps  imissed 0  ierrors 0
-port 0  rx 3760882 pps  tx 0 pps  imissed 8999720  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3761683 pps  imissed 1  ierrors 0
-port 0  rx 3770524 pps  tx 0 pps  imissed 8989946  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770346 pps  imissed 0  ierrors 0
-port 0  rx 3768072 pps  tx 0 pps  imissed 8994496  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767036 pps  imissed 1  ierrors 0
-port 0  rx 3767727 pps  tx 0 pps  imissed 8991295  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768661 pps  imissed 0  ierrors 0
-port 0  rx 3760160 pps  tx 0 pps  imissed 9000805  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3760160 pps  imissed 0  ierrors 0
-port 0  rx 3774635 pps  tx 0 pps  imissed 8986062  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774416 pps  imissed 0  ierrors 0
-port 0  rx 3754911 pps  tx 0 pps  imissed 9007251  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3752235 pps  imissed 0  ierrors 0
+port 0  rx 4089985 pps  tx 0 pps  imissed 8670770  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4088697 pps  imissed 0  ierrors 0
+port 0  rx 4081956 pps  tx 0 pps  imissed 8678083  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4080900 pps  imissed 0  ierrors 0
+port 0  rx 4099763 pps  tx 0 pps  imissed 8660247  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4098897 pps  imissed 0  ierrors 0
+port 0  rx 4091490 pps  tx 0 pps  imissed 8669091  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091489 pps  imissed 0  ierrors 0
+port 0  rx 4104335 pps  tx 0 pps  imissed 8657867  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4101630 pps  imissed 0  ierrors 0
+port 0  rx 4113129 pps  tx 0 pps  imissed 8645894  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4112588 pps  imissed 0  ierrors 0
+port 0  rx 4091819 pps  tx 0 pps  imissed 8668404  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4090759 pps  imissed 0  ierrors 0
+port 0  rx 4096831 pps  tx 0 pps  imissed 8665799  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4095032 pps  imissed 0  ierrors 0
+port 0  rx 4107120 pps  tx 0 pps  imissed 8651895  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4106488 pps  imissed 0  ierrors 0
+port 0  rx 4089580 pps  tx 0 pps  imissed 8670559  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4088508 pps  imissed 0  ierrors 0
+port 0  rx 4098425 pps  tx 0 pps  imissed 8661789  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4096152 pps  imissed 0  ierrors 0
+port 0  rx 4101690 pps  tx 0 pps  imissed 8660629  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100139 pps  imissed 0  ierrors 0
+port 0  rx 4100911 pps  tx 0 pps  imissed 8658892  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4100478 pps  imissed 0  ierrors 0
+port 0  rx 4089112 pps  tx 0 pps  imissed 8670356  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4088920 pps  imissed 0  ierrors 0
+port 0  rx 4076193 pps  tx 0 pps  imissed 8683785  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4075738 pps  imissed 0  ierrors 0
+port 0  rx 4125625 pps  tx 0 pps  imissed 8635131  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4122454 pps  imissed 0  ierrors 0
+port 0  rx 4096612 pps  tx 0 pps  imissed 8663512  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4095604 pps  imissed 0  ierrors 0
+port 0  rx 4105694 pps  tx 0 pps  imissed 8655230  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4105121 pps  imissed 1  ierrors 0
+port 0  rx 4106405 pps  tx 0 pps  imissed 8653845  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4105385 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 3770149 pps  tx 0 pps  imissed 8988943  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3771363 pps  imissed 0  ierrors 0
-port 0  rx 3780458 pps  tx 0 pps  imissed 8980054  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3780026 pps  imissed 0  ierrors 0
-port 0  rx 3770044 pps  tx 0 pps  imissed 8990478  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768587 pps  imissed 0  ierrors 0
-port 0  rx 3774189 pps  tx 0 pps  imissed 8986430  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3775438 pps  imissed 0  ierrors 0
-port 0  rx 3770217 pps  tx 0 pps  imissed 8990354  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770171 pps  imissed 0  ierrors 0
-port 0  rx 3760718 pps  tx 0 pps  imissed 8999923  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3760486 pps  imissed 0  ierrors 0
-port 0  rx 3785320 pps  tx 0 pps  imissed 8975148  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3784179 pps  imissed 2  ierrors 0  [0,0,0,0]
-port 0  rx 3772383 pps  tx 0 pps  imissed 8990010  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770825 pps  imissed 2  ierrors 0
+port 0  rx 4114035 pps  tx 0 pps  imissed 8646513  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4113003 pps  imissed 0  ierrors 0
+port 0  rx 4107254 pps  tx 0 pps  imissed 8654889  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4105297 pps  imissed 0  ierrors 0
+port 0  rx 4111417 pps  tx 0 pps  imissed 8647496  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4111159 pps  imissed 0  ierrors 0
+port 0  rx 4090704 pps  tx 0 pps  imissed 8670241  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4089598 pps  imissed 0  ierrors 0
+port 0  rx 4091978 pps  tx 0 pps  imissed 8668384  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091347 pps  imissed 0  ierrors 0
+port 0  rx 4100504 pps  tx 0 pps  imissed 8659828  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4099161 pps  imissed 0  ierrors 0
+port 0  rx 4114946 pps  tx 0 pps  imissed 8645058  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4114333 pps  imissed 0  ierrors 0
+port 0  rx 4104753 pps  tx 0 pps  imissed 8656973  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4103709 pps  imissed 0  ierrors 0
+port 0  rx 4081890 pps  tx 0 pps  imissed 8678233  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4080876 pps  imissed 0  ierrors 0
+port 0  rx 4091141 pps  tx 0 pps  imissed 8670820  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4090564 pps  imissed 0  ierrors 0
+port 0  rx 4127202 pps  tx 0 pps  imissed 8633411  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4125178 pps  imissed 0  ierrors 0
+port 0  rx 4109617 pps  tx 0 pps  imissed 8651975  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4107351 pps  imissed 0  ierrors 0
+port 0  rx 4098854 pps  tx 0 pps  imissed 8659807  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4099297 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 3772078 pps  tx 0 pps  imissed 8989184  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3774279 pps  imissed 2  ierrors 0  [0,0,0,0]
-port 0  rx 3776142 pps  tx 0 pps  imissed 8983646  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3776390 pps  imissed 1  ierrors 0  [0,0,0,0]
-port 0  rx 3772918 pps  tx 0 pps  imissed 8989946  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3771863 pps  imissed 0  ierrors 0  [0,0,0,0]
-port 0  rx 3772005 pps  tx 0 pps  imissed 8988410  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773030 pps  imissed 0  ierrors 0
-port 0  rx 3774231 pps  tx 0 pps  imissed 8988455  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773165 pps  imissed 1  ierrors 0
-port 0  rx 3772971 pps  tx 0 pps  imissed 8987464  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773746 pps  imissed 1  ierrors 0
-port 0  rx 3776505 pps  tx 0 pps  imissed 8983643  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3776331 pps  imissed 0  ierrors 0
-port 0  rx 3774274 pps  tx 0 pps  imissed 8986324  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773410 pps  imissed 0  ierrors 0
-port 0  rx 3773532 pps  tx 0 pps  imissed 8989139  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773518 pps  imissed 0  ierrors 0
-port 0  rx 3770469 pps  tx 0 pps  imissed 8991100  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770239 pps  imissed 0  ierrors 0
-port 0  rx 3773908 pps  tx 0 pps  imissed 8985460  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774276 pps  imissed 0  ierrors 0
-port 0  rx 3772656 pps  tx 0 pps  imissed 8989515  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3771099 pps  imissed 0  ierrors 0
+port 0  rx 4089204 pps  tx 0 pps  imissed 8670779  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4088290 pps  imissed 0  ierrors 0
+port 0  rx 4097287 pps  tx 0 pps  imissed 8664341  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4096382 pps  imissed 0  ierrors 0
+port 0  rx 4091836 pps  tx 0 pps  imissed 8667758  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091369 pps  imissed 0  ierrors 0
+port 0  rx 4117792 pps  tx 0 pps  imissed 8642484  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4116248 pps  imissed 0  ierrors 0
+port 0  rx 4092229 pps  tx 0 pps  imissed 8669807  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4090845 pps  imissed 0  ierrors 0
+port 0  rx 4141439 pps  tx 0 pps  imissed 8619285  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4139943 pps  imissed 0  ierrors 0
+port 0  rx 4110230 pps  tx 0 pps  imissed 8648587  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4110446 pps  imissed 0  ierrors 0
+port 0  rx 4084622 pps  tx 0 pps  imissed 8675351  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4083878 pps  imissed 0  ierrors 0
+port 0  rx 4094142 pps  tx 0 pps  imissed 8666080  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4092882 pps  imissed 0  ierrors 0
+port 0  rx 4097826 pps  tx 0 pps  imissed 8663014  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4097456 pps  imissed 0  ierrors 0
+port 0  rx 4090975 pps  tx 0 pps  imissed 8672025  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4089345 pps  imissed 0  ierrors 0
+port 0  rx 4076151 pps  tx 0 pps  imissed 8682716  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4076595 pps  imissed 0  ierrors 0
+port 0  rx 4097272 pps  tx 0 pps  imissed 8663539  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4095228 pps  imissed 0  ierrors 0
+port 0  rx 4074143 pps  tx 0 pps  imissed 8688369  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4073002 pps  imissed 0  ierrors 0
+port 0  rx 4086135 pps  tx 0 pps  imissed 8672966  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4086400 pps  imissed 0  ierrors 0
+port 0  rx 4103471 pps  tx 0 pps  imissed 8657251  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4102905 pps  imissed 0  ierrors 0
+port 0  rx 4139080 pps  tx 0 pps  imissed 8623610  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4136755 pps  imissed 0  ierrors 0
+port 0  rx 4117183 pps  tx 0 pps  imissed 8641702  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4117693 pps  imissed 0  ierrors 0
 new strategy detected, reloading...
 reload complete
-port 0  rx 3767335 pps  tx 0 pps  imissed 8991850  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768123 pps  imissed 0  ierrors 0
-port 0  rx 3763896 pps  tx 0 pps  imissed 8996509  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3763778 pps  imissed 1  ierrors 0
-port 0  rx 3769338 pps  tx 0 pps  imissed 8991211  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769338 pps  imissed 1  ierrors 0
-port 0  rx 3778135 pps  tx 0 pps  imissed 8983920  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3776472 pps  imissed 0  ierrors 0
-port 0  rx 3772534 pps  tx 0 pps  imissed 8986682  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774099 pps  imissed 0  ierrors 0
-port 0  rx 3774067 pps  tx 0 pps  imissed 8986658  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3772563 pps  imissed 1  ierrors 0
-port 0  rx 3769384 pps  tx 0 pps  imissed 8991043  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770383 pps  imissed 0  ierrors 0
-port 0  rx 3769962 pps  tx 0 pps  imissed 8990454  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769943 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3775208 pps  tx 0 pps  imissed 8985115  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774358 pps  imissed 1  ierrors 0
-port 0  rx 3773251 pps  tx 0 pps  imissed 8989136  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3771794 pps  imissed 0  ierrors 0
-port 0  rx 3769664 pps  tx 0 pps  imissed 8989646  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770909 pps  imissed 1  ierrors 0
-port 0  rx 3774747 pps  tx 0 pps  imissed 8985781  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774443 pps  imissed 1  ierrors 0
-port 0  rx 3773974 pps  tx 0 pps  imissed 8986457  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773732 pps  imissed 0  ierrors 0
-port 0  rx 3777406 pps  tx 0 pps  imissed 8983198  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3776887 pps  imissed 0  ierrors 0
-port 0  rx 3761227 pps  tx 0 pps  imissed 8999237  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3761168 pps  imissed 0  ierrors 0
-port 0  rx 3774888 pps  tx 0 pps  imissed 8987143  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773044 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3768880 pps  tx 0 pps  imissed 8990431  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769122 pps  imissed 0  ierrors 0
-port 0  rx 3771896 pps  tx 0 pps  imissed 8988631  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3772102 pps  imissed 0  ierrors 0
-port 0  rx 3771204 pps  tx 0 pps  imissed 8991628  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3771366 pps  imissed 1  ierrors 0  [0,0,0,0]
-port 0  rx 3776582 pps  tx 0 pps  imissed 8983461  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3777284 pps  imissed 0  ierrors 0
-port 0  rx 3778676 pps  tx 0 pps  imissed 8982358  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3778111 pps  imissed 0  ierrors 0
-port 0  rx 3760394 pps  tx 0 pps  imissed 9000080  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3760216 pps  imissed 0  ierrors 0
-port 0  rx 3769919 pps  tx 0 pps  imissed 8992421  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768766 pps  imissed 0  ierrors 0
-port 0  rx 3769000 pps  tx 0 pps  imissed 8990160  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770016 pps  imissed 0  ierrors 0
-port 0  rx 3768881 pps  tx 0 pps  imissed 8993690  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767841 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3743072 pps  tx 0 pps  imissed 9018025  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3742405 pps  imissed 0  ierrors 0
-port 0  rx 3773274 pps  tx 0 pps  imissed 8987602  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3772795 pps  imissed 0  ierrors 0
-port 0  rx 3774664 pps  tx 0 pps  imissed 8986761  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3775490 pps  imissed 0  ierrors 0
-port 0  rx 3767145 pps  tx 0 pps  imissed 8992112  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767823 pps  imissed 0  ierrors 0
-port 0  rx 3779351 pps  tx 0 pps  imissed 8982669  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3778007 pps  imissed 0  ierrors 0
-port 0  rx 3769268 pps  tx 0 pps  imissed 8991864  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770263 pps  imissed 0  ierrors 0
-port 0  rx 3771363 pps  tx 0 pps  imissed 8990104  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769996 pps  imissed 3  ierrors 0
-port 0  rx 3763372 pps  tx 0 pps  imissed 8995864  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3764264 pps  imissed 1  ierrors 0  [0,0,0,0]
-new strategy detected, reloading...
-reload complete
-port 0  rx 3769890 pps  tx 0 pps  imissed 8992947  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3766475 pps  imissed 3  ierrors 0  [0,0,0,0]
-port 0  rx 3763302 pps  tx 0 pps  imissed 8995828  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3765278 pps  imissed 0  ierrors 0  [0,0,0,0]
-port 0  rx 3777823 pps  tx 0 pps  imissed 8982555  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3777808 pps  imissed 1  ierrors 0
-port 0  rx 3769904 pps  tx 0 pps  imissed 8990348  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769813 pps  imissed 0  ierrors 0
-port 0  rx 3763931 pps  tx 0 pps  imissed 8996366  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3763910 pps  imissed 1  ierrors 0
-port 0  rx 3769206 pps  tx 0 pps  imissed 8991477  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769058 pps  imissed 1  ierrors 0
-port 0  rx 3762262 pps  tx 0 pps  imissed 8997940  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3762232 pps  imissed 0  ierrors 0
-port 0  rx 3771976 pps  tx 0 pps  imissed 8990457  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770250 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3750894 pps  tx 0 pps  imissed 9008096  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3752490 pps  imissed 1  ierrors 0
-port 0  rx 3779434 pps  tx 0 pps  imissed 8981273  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3778548 pps  imissed 0  ierrors 0
-port 0  rx 3769839 pps  tx 0 pps  imissed 8991814  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770713 pps  imissed 0  ierrors 0
-port 0  rx 3772467 pps  tx 0 pps  imissed 8989631  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770424 pps  imissed 1  ierrors 0
-port 0  rx 3765518 pps  tx 0 pps  imissed 8993716  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767078 pps  imissed 0  ierrors 0
-port 0  rx 3779568 pps  tx 0 pps  imissed 8982801  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3778032 pps  imissed 1  ierrors 0
-port 0  rx 3766801 pps  tx 0 pps  imissed 8992380  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767934 pps  imissed 0  ierrors 0
-port 0  rx 3760188 pps  tx 0 pps  imissed 9000843  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3760082 pps  imissed 0  ierrors 0
-port 0  rx 3768941 pps  tx 0 pps  imissed 8991635  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768892 pps  imissed 0  ierrors 0
-port 0  rx 3764387 pps  tx 0 pps  imissed 8997564  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3764425 pps  imissed 0  ierrors 0
-port 0  rx 3762527 pps  tx 0 pps  imissed 8997489  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3762474 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3767597 pps  tx 0 pps  imissed 8993912  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766839 pps  imissed 0  ierrors 0
-port 0  rx 3767452 pps  tx 0 pps  imissed 8993608  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767470 pps  imissed 0  ierrors 0
-port 0  rx 3779666 pps  tx 0 pps  imissed 8981140  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3778351 pps  imissed 0  ierrors 0
-port 0  rx 3767873 pps  tx 0 pps  imissed 8992712  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768637 pps  imissed 0  ierrors 0
-port 0  rx 3777371 pps  tx 0 pps  imissed 8983150  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3777186 pps  imissed 0  ierrors 0
-port 0  rx 3764209 pps  tx 0 pps  imissed 8996571  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3764122 pps  imissed 0  ierrors 0
-port 0  rx 3773177 pps  tx 0 pps  imissed 8987458  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773077 pps  imissed 0  ierrors 0
-port 0  rx 3763782 pps  tx 0 pps  imissed 8996794  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3763767 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3766611 pps  tx 0 pps  imissed 8994608  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766334 pps  imissed 1  ierrors 0
-port 0  rx 3761903 pps  tx 0 pps  imissed 8998936  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3760726 pps  imissed 0  ierrors 0
-port 0  rx 3766956 pps  tx 0 pps  imissed 8993497  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3767787 pps  imissed 0  ierrors 0
-port 0  rx 3768517 pps  tx 0 pps  imissed 8991936  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3768451 pps  imissed 0  ierrors 0  [0,0,0,0]
-port 0  rx 3770912 pps  tx 0 pps  imissed 8991390  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768239 pps  imissed 0  ierrors 0
-port 0  rx 3760819 pps  tx 0 pps  imissed 8998326  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3763209 pps  imissed 0  ierrors 0
-port 0  rx 3765530 pps  tx 0 pps  imissed 8995089  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3765258 pps  imissed 0  ierrors 0
-port 0  rx 3773970 pps  tx 0 pps  imissed 8987217  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773924 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3766151 pps  tx 0 pps  imissed 8995477  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766074 pps  imissed 2  ierrors 0
-port 0  rx 3763630 pps  tx 0 pps  imissed 8950073  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3764155 pps  imissed 1  ierrors 0
-port 0  rx 3773184 pps  tx 0 pps  imissed 8988125  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3772538 pps  imissed 1  ierrors 0
-port 0  rx 3771673 pps  tx 0 pps  imissed 8989515  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3771745 pps  imissed 0  ierrors 0
-port 0  rx 3767367 pps  tx 0 pps  imissed 8993233  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3765973 pps  imissed 0  ierrors 0
-port 0  rx 3765252 pps  tx 0 pps  imissed 8995410  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766849 pps  imissed 0  ierrors 0
-port 0  rx 3771197 pps  tx 0 pps  imissed 8991796  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768615 pps  imissed 0  ierrors 0
-port 0  rx 3764789 pps  tx 0 pps  imissed 8995003  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3765557 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3777650 pps  tx 0 pps  imissed 8982004  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3777817 pps  imissed 4  ierrors 0  [0,0,0,0]
-port 0  rx 3765683 pps  tx 0 pps  imissed 8996268  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3764206 pps  imissed 1  ierrors 0  [0,0,0,0]
-port 0  rx 3774046 pps  tx 0 pps  imissed 8985782  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3775242 pps  imissed 2  ierrors 0  [0,0,0,0]
-port 0  rx 3766648 pps  tx 0 pps  imissed 8994214  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766648 pps  imissed 0  ierrors 0
-port 0  rx 3769551 pps  tx 0 pps  imissed 8990849  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3769387 pps  imissed 0  ierrors 0
-port 0  rx 3766681 pps  tx 0 pps  imissed 8993814  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766652 pps  imissed 1  ierrors 0
-port 0  rx 3770062 pps  tx 0 pps  imissed 8991211  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770233 pps  imissed 1  ierrors 0
-port 0  rx 3769563 pps  tx 0 pps  imissed 8991752  ierrors 0  [0,0,0,0]
-port 1  rx 1 pps  tx 3769095 pps  imissed 0  ierrors 0  [0,0,0,0]
-port 0  rx 3772601 pps  tx 0 pps  imissed 8989639  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3770743 pps  imissed 0  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3766990 pps  tx 0 pps  imissed 8992126  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3768877 pps  imissed 0  ierrors 0
-port 0  rx 3774488 pps  tx 0 pps  imissed 8986758  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774089 pps  imissed 0  ierrors 0
-port 0  rx 3774780 pps  tx 0 pps  imissed 8985872  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3774711 pps  imissed 0  ierrors 0
-port 0  rx 3773785 pps  tx 0 pps  imissed 8986614  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3773671 pps  imissed 0  ierrors 0
-port 0  rx 3765130 pps  tx 0 pps  imissed 8995735  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3764945 pps  imissed 0  ierrors 0
-port 0  rx 3761124 pps  tx 0 pps  imissed 8999324  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3761047 pps  imissed 0  ierrors 0
-port 0  rx 3763917 pps  tx 0 pps  imissed 8996504  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3763863 pps  imissed 2  ierrors 0
-new strategy detected, reloading...
-reload complete
-port 0  rx 3762256 pps  tx 0 pps  imissed 8998260  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3762170 pps  imissed 0  ierrors 0
-port 0  rx 3760427 pps  tx 0 pps  imissed 9001262  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3760130 pps  imissed 0  ierrors 0
-port 0  rx 3772203 pps  tx 0 pps  imissed 8987491  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3771808 pps  imissed 0  ierrors 0
-port 0  rx 3776317 pps  tx 0 pps  imissed 8984189  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3776480 pps  imissed 0  ierrors 0
-port 0  rx 3767727 pps  tx 0 pps  imissed 8993113  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3766387 pps  imissed 0  ierrors 0
-port 0  rx 3777626 pps  tx 0 pps  imissed 8982398  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 3778893 pps  imissed 0  ierrors 0
-port 0  rx 2021377 pps  tx 0 pps  imissed 4827504  ierrors 0  [0,0,0,0]
-port 1  rx 0 pps  tx 2021353 pps  imissed 0  ierrors 0
+port 0  rx 4073627 pps  tx 0 pps  imissed 8687125  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4072641 pps  imissed 0  ierrors 0
+port 0  rx 4087680 pps  tx 0 pps  imissed 8672521  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4086871 pps  imissed 0  ierrors 0
+port 0  rx 4090218 pps  tx 0 pps  imissed 8670372  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4089109 pps  imissed 0  ierrors 0
+port 0  rx 4084698 pps  tx 0 pps  imissed 8675506  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4083839 pps  imissed 0  ierrors 0
+port 0  rx 4103301 pps  tx 0 pps  imissed 8656842  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4101890 pps  imissed 0  ierrors 0
+port 0  rx 4092713 pps  tx 0 pps  imissed 8669474  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4091135 pps  imissed 0  ierrors 0
+port 0  rx 4090548 pps  tx 0 pps  imissed 8670337  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4089987 pps  imissed 0  ierrors 0
+port 0  rx 4095057 pps  tx 0 pps  imissed 8665905  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4093597 pps  imissed 0  ierrors 0
+port 0  rx 4104312 pps  tx 0 pps  imissed 8654445  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4104378 pps  imissed 0  ierrors 0
+port 0  rx 4099496 pps  tx 0 pps  imissed 8662173  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4098487 pps  imissed 0  ierrors 0
+port 0  rx 4077841 pps  tx 0 pps  imissed 8681947  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 4077054 pps  imissed 0  ierrors 0
+port 0  rx 2194416 pps  tx 0 pps  imissed 4638371  ierrors 0  [0,0,0,0]
+port 1  rx 0 pps  tx 2191301 pps  imissed 0  ierrors 0
