@@ -73,9 +73,9 @@ One subplot per backend: dashed black is synthetic capacity, solid line is sent-
 
 ### Packet latency
 
-![latency](test/results/example-test/latency-real.png)
+![latency](test/results/example-test/packet-latency-real.png)
 
-Mean packet latency per backend (M/M/1 sojourn model against live sent/cap, log axis). Backends settle at the ~10 µs floor when within capacity and spike upward during the brief overload windows between a phase change and the next installed strategy. Purple down-triangles along the top mark each hot-swap — the density of swaps clusters around the phase-change markers where the controller is iterating fastest.
+Mean packet latency per backend (M/M/1 sojourn model against live sent/cap, log axis). Purple down-triangles along the top mark each hot-swap — the density of swaps clusters around the phase-change markers where the controller is iterating fastest.
 
 ### Controller cycle latency
 
