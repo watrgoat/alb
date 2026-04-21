@@ -1,0 +1,14 @@
+# 4-port loopback test config.
+# All three backends rewrite packets to the same physical port (P4:
+# enp4s0f3np3, MAC f8:f2:1e:08:64:94) but keep distinct destination IPs
+# so the XDP collector can bucket counters per backend.
+backends:
+  - ip: "192.168.1.100"
+    port: 8080
+    mac: "f8:f2:1e:08:64:94"
+  - ip: "192.168.1.101"
+    port: 8080
+    mac: "f8:f2:1e:08:64:94"
+  - ip: "192.168.1.102"
+    port: 8080
+    mac: "f8:f2:1e:08:64:94"
