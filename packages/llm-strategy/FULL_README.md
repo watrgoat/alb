@@ -493,7 +493,7 @@ enough that even 3000 samples showed measurable skew for specific
 
 ### 7.4 Assertions
 
-Two checks, both must pass:
+Three checks, all must pass:
 
 1. **Per-backend ratio after each transition.** For each entry in
    the capacity schedule (t = 0, 30, 90, 150), at t + 20 seconds,
@@ -504,11 +504,22 @@ Two checks, both must pass:
    across all 180 seconds must be under **5%**. With 4 transitions
    × ~2000 dropped packets during each transient, plus ~0 miss
    during steady periods, we land around 2–3%.
+3. **Code-path latency budgets.** Timestamps taken with
+   `std::chrono::steady_clock` around each hot call:
+   - `Strategy::select()` p99 < 5000 ns per packet
+   - `StubGenerator::compute_weights()` p99 < 1 ms per cycle
+   - `HotSwapTable::swap()` p99 < 500 µs per cycle
 
-The first check exists to verify each backend individually reaches
-its target. The second exists to verify the aggregate system
-behavior (not just "one backend is happy while another is
-suffering").
+   These are intentionally loose — the point is to catch accidental
+   regressions (alloc in hot path, O(n²) over backends, unexpected
+   syscalls) rather than to assert absolute performance. `steady_clock`
+   itself costs ~20–30 ns on x86, which sets the floor for the
+   per-packet number.
+
+The first check verifies each backend individually reaches its
+target. The second verifies aggregate system behavior (not just
+"one backend is happy while another suffers"). The third guards
+against algorithmic complexity regressions in the hot paths.
 
 ### 7.5 CSV output
 

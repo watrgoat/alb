@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -90,6 +91,15 @@ struct ConvergenceConfig {
 	double ratio_low = 0.9;
 	double ratio_high = 1.1;
 	double total_miss_budget = 0.05;
+
+	// latency budgets. these run in the simulator — no network — so they
+	// measure code-path overhead only. budgets are intentionally loose so
+	// the test doesn't flake on loaded CI hosts / sanitizer builds, but
+	// tight enough to catch an accidental O(n^2) or alloc-in-hot-path
+	// regression.
+	double select_p99_ns_budget = 5000.0;     // per-packet select()
+	double compute_weights_p99_ns_budget = 1e6;   // per-cycle (1 ms)
+	double swap_max_ns_budget = 500000.0;     // per-cycle swap (500 us)
 };
 
 struct CapChange {
@@ -106,11 +116,74 @@ struct PerSecondRow {
 	uint32_t cap;
 };
 
+struct LatencyStats {
+	// per-packet select() latency across the whole run, nanoseconds.
+	std::vector<uint64_t> select_ns;
+	// per-cycle compute_weights() latency, nanoseconds.
+	std::vector<uint64_t> compute_weights_ns;
+	// per-cycle HotSwapTable::swap() latency, nanoseconds.
+	std::vector<uint64_t> swap_ns;
+};
+
+struct LatencySummary {
+	double select_p50_ns{0}, select_p95_ns{0}, select_p99_ns{0};
+	uint64_t select_max_ns{0};
+	double compute_weights_p50_ns{0}, compute_weights_p99_ns{0};
+	uint64_t compute_weights_max_ns{0};
+	double swap_p50_ns{0}, swap_p99_ns{0};
+	uint64_t swap_max_ns{0};
+	size_t n_select_samples{0};
+	size_t n_cycle_samples{0};
+};
+
 struct ConvergenceResult {
 	std::vector<PerSecondRow> rows;
 	bool passed{true};
 	std::vector<std::string> failures;
+	LatencyStats latency;
+	LatencySummary latency_summary;
 };
+
+double percentile_ns(std::vector<uint64_t> &xs, double q)
+{
+	if (xs.empty())
+		return 0.0;
+	size_t k = static_cast<size_t>(q * (xs.size() - 1));
+	std::nth_element(xs.begin(), xs.begin() + k, xs.end());
+	return static_cast<double>(xs[k]);
+}
+
+LatencySummary summarize_latency(LatencyStats stats)
+{
+	LatencySummary s;
+	s.n_select_samples = stats.select_ns.size();
+	s.n_cycle_samples = stats.compute_weights_ns.size();
+	if (!stats.select_ns.empty()) {
+		s.select_max_ns = *std::max_element(stats.select_ns.begin(),
+						    stats.select_ns.end());
+		// nth_element mutates; percentile_ns takes by reference so the
+		// three calls compose cheaply on the same buffer.
+		s.select_p50_ns = percentile_ns(stats.select_ns, 0.50);
+		s.select_p95_ns = percentile_ns(stats.select_ns, 0.95);
+		s.select_p99_ns = percentile_ns(stats.select_ns, 0.99);
+	}
+	if (!stats.compute_weights_ns.empty()) {
+		s.compute_weights_max_ns =
+		    *std::max_element(stats.compute_weights_ns.begin(),
+				      stats.compute_weights_ns.end());
+		s.compute_weights_p50_ns =
+		    percentile_ns(stats.compute_weights_ns, 0.50);
+		s.compute_weights_p99_ns =
+		    percentile_ns(stats.compute_weights_ns, 0.99);
+	}
+	if (!stats.swap_ns.empty()) {
+		s.swap_max_ns = *std::max_element(stats.swap_ns.begin(),
+						  stats.swap_ns.end());
+		s.swap_p50_ns = percentile_ns(stats.swap_ns, 0.50);
+		s.swap_p99_ns = percentile_ns(stats.swap_ns, 0.99);
+	}
+	return s;
+}
 
 ConvergenceResult run_simulation(const ConvergenceConfig &cfg,
 				 const std::vector<CapChange> &schedule)
@@ -161,7 +234,19 @@ ConvergenceResult run_simulation(const ConvergenceConfig &cfg,
 			StrategyInput in{
 			    mix_hash(static_cast<uint32_t>(t) * 0x9E3779B1u + p),
 			    p};
+			// per-packet select() latency. steady_clock::now() is
+			// ~20-30ns on modern x86, so for very short select()
+			// paths we're partly measuring the clock itself — that
+			// sets the noise floor. we record the measured delta
+			// directly; the p99 budget accounts for this floor.
+			auto t0 = std::chrono::steady_clock::now();
 			ServerState *ss = strat->select(in);
+			auto t1 = std::chrono::steady_clock::now();
+			out.latency.select_ns.push_back(
+			    static_cast<uint64_t>(
+				std::chrono::duration_cast<
+				    std::chrono::nanoseconds>(t1 - t0)
+				    .count()));
 			int bidx =
 			    static_cast<int>(ss - servers.data());
 			sent[bidx]++;
@@ -194,13 +279,27 @@ ConvergenceResult run_simulation(const ConvergenceConfig &cfg,
 			MetricsSnapshot snap = metrics.snapshot(
 			    static_cast<uint64_t>(t),
 			    static_cast<double>(cfg.generate_every));
+			auto cw_t0 = std::chrono::steady_clock::now();
 			auto weights = gen.compute_weights(snap);
+			auto cw_t1 = std::chrono::steady_clock::now();
+			out.latency.compute_weights_ns.push_back(
+			    static_cast<uint64_t>(
+				std::chrono::duration_cast<
+				    std::chrono::nanoseconds>(cw_t1 - cw_t0)
+				    .count()));
+
 			for (int i = 0; i < cfg.n_backends; i++)
 				servers[i].weight = weights[i];
 			// toggle slot to exercise the swap path. both slots
 			// hold the same create/destroy pair here (weights live
 			// on ServerState).
+			auto sw_t0 = std::chrono::steady_clock::now();
 			table.swap();
+			auto sw_t1 = std::chrono::steady_clock::now();
+			out.latency.swap_ns.push_back(static_cast<uint64_t>(
+			    std::chrono::duration_cast<
+				std::chrono::nanoseconds>(sw_t1 - sw_t0)
+				.count()));
 		}
 	}
 
@@ -268,6 +367,48 @@ ConvergenceResult run_simulation(const ConvergenceConfig &cfg,
 		out.passed = false;
 	}
 
+	// latency assertions. summarize_latency mutates its argument (nth_element
+	// shuffles the buffers), so pass a copy so the raw samples in
+	// out.latency stay usable for any downstream CSV dump.
+	out.latency_summary = summarize_latency(out.latency);
+	const LatencySummary &ls = out.latency_summary;
+	if (ls.select_p99_ns > cfg.select_p99_ns_budget) {
+		char buf[256];
+		snprintf(buf, sizeof(buf),
+			 "select() p99 latency %.0f ns > budget %.0f ns "
+			 "(p50=%.0f p95=%.0f max=%lu over %zu samples)",
+			 ls.select_p99_ns, cfg.select_p99_ns_budget,
+			 ls.select_p50_ns, ls.select_p95_ns,
+			 static_cast<unsigned long>(ls.select_max_ns),
+			 ls.n_select_samples);
+		out.failures.emplace_back(buf);
+		out.passed = false;
+	}
+	if (ls.compute_weights_p99_ns > cfg.compute_weights_p99_ns_budget) {
+		char buf[256];
+		snprintf(buf, sizeof(buf),
+			 "compute_weights() p99 latency %.0f ns > budget %.0f "
+			 "ns (p50=%.0f max=%lu over %zu cycles)",
+			 ls.compute_weights_p99_ns,
+			 cfg.compute_weights_p99_ns_budget,
+			 ls.compute_weights_p50_ns,
+			 static_cast<unsigned long>(ls.compute_weights_max_ns),
+			 ls.n_cycle_samples);
+		out.failures.emplace_back(buf);
+		out.passed = false;
+	}
+	if (static_cast<double>(ls.swap_max_ns) > cfg.swap_max_ns_budget) {
+		char buf[256];
+		snprintf(buf, sizeof(buf),
+			 "HotSwapTable::swap() max latency %lu ns > budget "
+			 "%.0f ns (p50=%.0f p99=%.0f over %zu cycles)",
+			 static_cast<unsigned long>(ls.swap_max_ns),
+			 cfg.swap_max_ns_budget, ls.swap_p50_ns,
+			 ls.swap_p99_ns, ls.n_cycle_samples);
+		out.failures.emplace_back(buf);
+		out.passed = false;
+	}
+
 	return out;
 }
 
@@ -302,6 +443,7 @@ int main(int argc, char **argv)
 {
 	std::string csv_path;
 	std::string markers_path;
+	std::string latency_path;
 	bool in_test_mode = false;
 
 	for (int i = 1; i < argc; i++) {
@@ -310,6 +452,8 @@ int main(int argc, char **argv)
 			csv_path = argv[++i];
 		else if (a == "--markers" && i + 1 < argc)
 			markers_path = argv[++i];
+		else if (a == "--latency-csv" && i + 1 < argc)
+			latency_path = argv[++i];
 		else if (a == "--test")
 			in_test_mode = true;
 	}
@@ -335,6 +479,20 @@ int main(int argc, char **argv)
 		write_csv(res, csv_path);
 	if (!markers_path.empty())
 		write_markers(schedule, markers_path);
+	if (!latency_path.empty()) {
+		std::ofstream os(latency_path);
+		os << "metric,p50_ns,p95_ns,p99_ns,max_ns,samples\n";
+		const LatencySummary &ls = res.latency_summary;
+		os << "select," << ls.select_p50_ns << ',' << ls.select_p95_ns
+		   << ',' << ls.select_p99_ns << ',' << ls.select_max_ns << ','
+		   << ls.n_select_samples << '\n';
+		os << "compute_weights," << ls.compute_weights_p50_ns << ",,"
+		   << ls.compute_weights_p99_ns << ','
+		   << ls.compute_weights_max_ns << ',' << ls.n_cycle_samples
+		   << '\n';
+		os << "swap," << ls.swap_p50_ns << ",," << ls.swap_p99_ns << ','
+		   << ls.swap_max_ns << ',' << ls.n_cycle_samples << '\n';
+	}
 
 	if (!res.passed) {
 		for (const auto &m : res.failures)
@@ -342,7 +500,21 @@ int main(int argc, char **argv)
 		return in_test_mode ? 1 : 1;
 	}
 
-	fprintf(stdout, "convergence test: PASS (%zu sample rows)\n",
-		res.rows.size());
+	const LatencySummary &ls = res.latency_summary;
+	fprintf(stdout,
+		"convergence test: PASS (%zu sample rows)\n"
+		"  select():         p50=%.0f ns  p95=%.0f ns  p99=%.0f ns  "
+		"max=%lu ns  (n=%zu)\n"
+		"  compute_weights():p50=%.0f ns  p99=%.0f ns  max=%lu ns  "
+		"(n=%zu)\n"
+		"  swap():           p50=%.0f ns  p99=%.0f ns  max=%lu ns  "
+		"(n=%zu)\n",
+		res.rows.size(), ls.select_p50_ns, ls.select_p95_ns,
+		ls.select_p99_ns, static_cast<unsigned long>(ls.select_max_ns),
+		ls.n_select_samples, ls.compute_weights_p50_ns,
+		ls.compute_weights_p99_ns,
+		static_cast<unsigned long>(ls.compute_weights_max_ns),
+		ls.n_cycle_samples, ls.swap_p50_ns, ls.swap_p99_ns,
+		static_cast<unsigned long>(ls.swap_max_ns), ls.n_cycle_samples);
 	return 0;
 }
