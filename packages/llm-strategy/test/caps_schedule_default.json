@@ -1,0 +1,6 @@
+[
+  {"t_offset_sec": 0,   "caps_fraction": [0.3667, 0.3667, 0.3667], "note": "equal — 10% headroom"},
+  {"t_offset_sec": 30,  "caps_fraction": [0.1833, 0.3667, 0.5500], "note": "1:2:3 ratios with 10% headroom"},
+  {"t_offset_sec": 90,  "caps_fraction": [0.5500, 0.1833, 0.3667], "note": "3:1:2 ratios with 10% headroom"},
+  {"t_offset_sec": 150, "caps_fraction": [0.3667, 0.3667, 0.3667], "note": "back to equal"}
+]

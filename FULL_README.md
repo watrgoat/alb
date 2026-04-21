@@ -664,7 +664,26 @@ Same invocation, minus `--vdev=...` and `--no-pci`, plus the correct
 `-l`, PCI addresses, and whatever hugepage setup your host needs.
 Specifics depend on your hardware; see DPDK docs.
 
-### 13.6 Drive it with the LLM generator
+### 13.6 Real-hardware convergence test
+
+```bash
+sudo ./packages/llm-strategy/test/run_4port_convergence.sh [DURATION_SEC]
+```
+
+Runs the same 4-port pipeline as
+[test/run_4port_test.sh](test/run_4port_test.sh) plus the LLM
+controller loop. `metrics_adapter.py` converts the XDP collector's
+real measurements into a `MetricsSnapshot` with a synthetic
+per-backend capacity schedule, the generator consumes that snapshot,
+rewrites `./strategies/libstrategy.so`, and ALB's inotify watcher
+hot-swaps. Output: `convergence-real.png` in the results dir, showing
+observed per-backend rate tracking the synthetic capacity steps. Set
+`SCHEDULE=path/to/caps.json` to customize the capacity schedule; set
+`ANTHROPIC_API_KEY` to use Claude instead of the stub controller. See
+[packages/llm-strategy/FULL_README.md](packages/llm-strategy/FULL_README.md#95-real-hardware-convergence-test-4-port)
+for the full pipeline diagram and env knobs.
+
+### 13.7 Drive it with the LLM generator
 
 ```bash
 bazel build //packages/llm-strategy:generator \
@@ -685,7 +704,7 @@ Metrics feed: any process that writes the JSON schema emitted by
 `MetricsCollector::snapshot()` output through a file (or stdout
 tailed into the generator's `--feed -` stdin).
 
-### 13.7 Regenerate the convergence plot
+### 13.8 Regenerate the simulator convergence plot
 
 ```bash
 bash packages/llm-strategy/test/run_convergence_plot.sh

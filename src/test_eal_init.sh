@@ -17,7 +17,7 @@ cleanup() {
 trap cleanup EXIT
 
 OUTPUT=$(timeout 4s stdbuf -oL "$BINARY" \
-    -l 0 \
+    -l 0-2 \
     --no-huge \
     --no-pci \
     --no-telemetry \

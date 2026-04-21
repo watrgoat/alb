@@ -162,9 +162,17 @@ int worker_main(void *arg)
 					continue;
 				}
 
-				StrategyInput input = {ip_hdr->src_addr ^
-							   ip_hdr->dst_addr,
-						       pkt_seq++};
+				// include udp src_port so per-packet hash varies
+				// within a single (src_ip, dst_ip) flow. without
+				// this, the traffic-generator's pre-built bursts
+				// — which share src/dst IP but vary src_port —
+				// all collide to a single bucket and the weighted
+				// strategy sends 100% of traffic to one backend
+				// regardless of the weight vector.
+				StrategyInput input = {
+				    ip_hdr->src_addr ^ ip_hdr->dst_addr ^
+					static_cast<uint32_t>(udp_hdr->src_port),
+				    pkt_seq++};
 				ServerState *ss = strat->select(input);
 				int bidx = static_cast<int>(ss - server_states);
 

@@ -642,6 +642,80 @@ bazel-bin/packages/llm-strategy/generator ... --once
 
 `SIGINT` / `SIGTERM` → exit after current cycle, clean up temp dir.
 
+### 9.5 Real-hardware convergence test (4-port)
+
+The simulator in §7 is offline. To exercise the same controller loop
+against a **live ALB** with real NIC traffic:
+
+```bash
+sudo ./packages/llm-strategy/test/run_4port_convergence.sh [DURATION]
+```
+
+Pipeline:
+
+```
+traffic-generator  P1 --cable--> P2  ALB  P3 --cable--> P4  XDP-collector
+                                    │                         │
+                                    ▼                         │
+                          inotify(./strategies/)               │
+                                    ▲                         │
+                                    │                         ▼
+                          libstrategy.so             traffic-stats.csv
+                                    ▲                         │
+             +----------------------+                         │
+             │                                                │
+        llm-generator ◀── snapshot.json ◀── metrics_adapter ◀-+
+                                             (synthesizes caps)
+```
+
+Three new components on top of [test/run_4port_test.sh](../../test/run_4port_test.sh):
+
+1. **[metrics_adapter.py](test/metrics_adapter.py)** — tails the XDP
+   collector's `traffic-stats.csv`, applies a per-backend capacity
+   schedule ([caps_schedule_default.json](test/caps_schedule_default.json)
+   or your own via `SCHEDULE=...`), and writes a snapshot in the
+   `MetricsSnapshot` schema the generator expects. Real backends
+   don't actually drop, so `packets_missed` is synthesized as
+   `max(0, observed_pps − cap_pps) × window_sec`. This converts the
+   uncapped NIC loopback into a capacitated system for the controller.
+2. **[generator.py](src/generator.py)** (reused) — runs with
+   `--feed snapshot.json`, either `--stub` or with `ANTHROPIC_API_KEY`,
+   rewrites `./strategies/libstrategy.so`. ALB's `manager_main` picks
+   it up via its existing inotify path.
+3. **[plot_4port_convergence.py](test/plot_4port_convergence.py)** —
+   reads the collector CSV + capacity schedule + `start_time.txt`,
+   plots one subplot per backend with synthetic-cap overlay, red
+   shading where observed exceeded cap, vertical markers at schedule
+   changes, and an aggregate subplot at the bottom.
+
+Environment knobs:
+
+| Var | Default | Meaning |
+|-----|---------|---------|
+| `P1..P4` | `enp4s0f{0..3}np{0..3}` | port names (match `run_4port_test.sh`) |
+| `OUTDIR` | `test/results/<ts>-conv` | results dir |
+| `SCHEDULE` | `caps_schedule_default.json` | capacity schedule |
+| `ANTHROPIC_API_KEY` | unset → stub mode | if set, LLM path is used |
+| `MODEL` | `claude-haiku-4-5` | LLM model id |
+| `GEN_INTERVAL` | 5 s | generator poll / adapter emit interval |
+| `ADAPTER_WINDOW` | 5 s | averaging window over `traffic-stats.csv` |
+
+Outputs (in `$OUTDIR`):
+
+- `traffic-stats.csv` — real measured per-backend pps
+- `tx-stats.csv` — total TX pps from the generator
+- `caps_schedule.json` — the applied schedule (copied in)
+- `snapshot.json` — latest snapshot fed to the controller
+- `snapshots.jsonl` — full adapter history, one JSON per cycle
+- `alb.log`, `gen.log`, `col.log`, `adapter.log`, `llmgen.log`
+- `convergence-real.png` — the final plot
+
+Caveat: the synthetic capacity numbers in
+[caps_schedule_default.json](test/caps_schedule_default.json) are
+tuned for boxes pushing 6M+ aggregate pps (so the equal-split rate
+exceeds the lowest cap and the controller sees non-zero miss). On
+slower hosts, scale the schedule down by editing the JSON.
+
 ---
 
 ## 10. File map
@@ -664,9 +738,13 @@ packages/llm-strategy/
     ├── plot_convergence.py            # matplotlib driver
     ├── run_convergence_plot.sh        # rerunnable wrapper
     ├── stub_generator_test.sh         # sh_test for offline generator CLI path
-    ├── convergence.csv                # generated
-    ├── markers.csv                    # generated
-    └── convergence.png                # generated (committed)
+    ├── convergence.csv                # generated (simulator)
+    ├── markers.csv                    # generated (simulator)
+    ├── convergence.png                # generated (simulator, committed)
+    ├── metrics_adapter.py             # real-hw: collector CSV → snapshot.json
+    ├── caps_schedule_default.json     # real-hw: default capacity schedule
+    ├── run_4port_convergence.sh       # real-hw: orchestrator (sudo + DPDK)
+    └── plot_4port_convergence.py      # real-hw: plot driver
 ```
 
 Also touched (minimally, additively) in the rest of the repo:

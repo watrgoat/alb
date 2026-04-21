@@ -30,11 +30,16 @@ int main(int argc, char **argv)
 		return 4;
 	}
 
+	// all weights=1 mirrors the ALB's default config (config-4port.yaml
+	// and similar): strategies that use servers[i].weight will produce
+	// the same distribution here as they do in the running ALB. stub-
+	// and LLM-generated strategies that bake in their own weight
+	// constants will use those constants regardless.
 	constexpr int N = 3;
 	ServerState servers[N] = {
 	    {0xC0A80001u, 0, 0, 1},
-	    {0xC0A80002u, 0, 0, 2},
-	    {0xC0A80003u, 0, 0, 3},
+	    {0xC0A80002u, 0, 0, 1},
+	    {0xC0A80003u, 0, 0, 1},
 	};
 
 	Strategy *s = cr(servers, N);
@@ -44,8 +49,25 @@ int main(int argc, char **argv)
 		return 5;
 	}
 
-	for (uint32_t i = 0; i < 100; i++) {
-		StrategyInput in{i * 0x9E3779B1u, i};
+	// two-phase: first a quick correctness smoke (any out-of-range
+	// pointer fails the test), then a distribution probe over 10k
+	// well-distributed hash inputs. the second phase gives the
+	// generator caller an empirical ratio to stash in
+	// current_weights.json — lets the simulate-mode adapter treat
+	// LLM-generated .so's the same as stub-generated ones.
+	constexpr int kSmokeCalls = 100;
+	constexpr int kProbeCalls = 10000;
+	int counts[N] = {0};
+
+	for (uint32_t i = 0; i < kSmokeCalls + kProbeCalls; i++) {
+		// splitmix32-style avalanche so sequential indices produce
+		// well-distributed hashes — matters for weighted strategies
+		// using `hash % total_weight`.
+		uint32_t x = i + 1;
+		x = (x ^ (x >> 16)) * 0x7FEB352Du;
+		x = (x ^ (x >> 15)) * 0x846CA68Bu;
+		x = x ^ (x >> 16);
+		StrategyInput in{x, i};
 		ServerState *r = s->select(in);
 		if (!r || r < servers || r >= servers + N) {
 			fprintf(stderr,
@@ -54,7 +76,18 @@ int main(int argc, char **argv)
 			dlclose(h);
 			return 6;
 		}
+		if (i >= kSmokeCalls) {
+			counts[r - servers]++;
+		}
 	}
+
+	// machine-readable distribution on the last stdout line — the
+	// Python caller parses this to recover the strategy's effective
+	// weight ratio without having to read the .so's source.
+	printf("{\"distribution\":[");
+	for (int i = 0; i < N; i++)
+		printf("%s%d", i ? "," : "", counts[i]);
+	printf("],\"samples\":%d}\n", kProbeCalls);
 
 	de(s);
 	dlclose(h);
