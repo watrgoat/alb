@@ -15,21 +15,36 @@ If libdpdk.pc is installed in a non-standard location, set PKG_CONFIG_PATH.
     result = repository_ctx.execute(["pkg-config", "--cflags", "libdpdk"])
     if result.return_code != 0:
         fail("pkg-config --cflags libdpdk failed: " + result.stderr)
-    cflags = result.stdout.strip()
+    raw_cflags = result.stdout.strip().split(" ") if result.stdout.strip() else []
 
-    # Bazel rejects include paths in copts that reference locations outside
-    # the execution root and the toolchain's builtin include directories.
-    # Absolute paths under /usr/include are accepted (they're registered as
-    # builtins in the default Linux toolchain), but DPDK's pkg-config output
-    # also pulls in /usr/lib/x86_64-linux-gnu/dbus-1.0/include (a Debian
-    # multiarch quirk that exposes dbus-arch-deps.h). alb doesn't include
-    # dbus headers, so drop any -I paths that aren't under /usr/include.
-    raw_flags = cflags.split(" ") if cflags else []
-    cflag_list = []
-    for flag in raw_flags:
-        if flag.startswith("-I/") and not flag.startswith("-I/usr/include"):
+    # pkg-config pulls transitive deps (libnl, dbus) into -I even though
+    # dpdk's userland headers don't include any of those directly. bazel's
+    # include scanner rejects -I and -isystem paths under /usr/lib/... so
+    # we drop those paths entirely. system -I under /usr/include is
+    # rewritten to -isystem to avoid sandbox complaints.
+    def _skip_path(p):
+        return "dbus" in p or "libnl" in p
+
+    cflags_list = []
+    skip_next = False
+    for idx in range(len(raw_cflags)):
+        if skip_next:
+            skip_next = False
             continue
-        cflag_list.append(flag)
+        f = raw_cflags[idx]
+        if f == "-I" and idx + 1 < len(raw_cflags):
+            p = raw_cflags[idx + 1]
+            skip_next = True
+            if not _skip_path(p):
+                cflags_list.append("-isystem")
+                cflags_list.append(p)
+        elif f.startswith("-I"):
+            p = f[2:]
+            if not _skip_path(p):
+                cflags_list.append("-isystem")
+                cflags_list.append(p)
+        else:
+            cflags_list.append(f)
 
     result = repository_ctx.execute(["pkg-config", "--libs", "libdpdk"])
     if result.return_code != 0:
@@ -38,7 +53,7 @@ If libdpdk.pc is installed in a non-standard location, set PKG_CONFIG_PATH.
 
     # Write cflags to a file so BUILD files can load them
     repository_ctx.file("cflags.bzl", content = "DPDK_COPTS = {}\n".format(
-        repr(cflag_list),
+        repr(cflags_list),
     ))
 
     repository_ctx.file("BUILD.bazel", content = """

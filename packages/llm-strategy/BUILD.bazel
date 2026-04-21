@@ -1,0 +1,96 @@
+LINUX_ONLY = ["@platforms//os:linux"]
+
+cc_library(
+    name = "metrics",
+    srcs = ["src/metrics.cpp"],
+    hdrs = ["include/metrics.hpp"],
+    strip_include_prefix = "include",
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "stub_generator",
+    srcs = ["src/stub_generator.cpp"],
+    hdrs = ["src/stub_generator.hpp"],
+    strip_include_prefix = "src",
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":metrics",
+        "//packages/balancer-strategies:strategy",
+    ],
+)
+
+cc_binary(
+    name = "smoke_tester",
+    srcs = ["src/smoke_tester.cpp"],
+    linkopts = ["-ldl"],
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
+    deps = ["//packages/balancer-strategies:strategy"],
+)
+
+# convergence simulator. built twice: once as a cc_test (assertions),
+# once as a cc_binary that writes CSV for the plot driver.
+_CONVERGENCE_SRCS = ["test/convergence_test.cpp"]
+
+_CONVERGENCE_DEPS = [
+    ":metrics",
+    ":stub_generator",
+    "//packages/balancer-strategies:strategy",
+    "//packages/version-table",
+]
+
+cc_test(
+    name = "llm_convergence_test",
+    srcs = _CONVERGENCE_SRCS,
+    tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
+    deps = _CONVERGENCE_DEPS,
+)
+
+cc_binary(
+    name = "convergence_runner",
+    srcs = _CONVERGENCE_SRCS,
+    target_compatible_with = LINUX_ONLY,
+    visibility = ["//visibility:public"],
+    deps = _CONVERGENCE_DEPS,
+)
+
+py_binary(
+    name = "plot_convergence",
+    srcs = ["test/plot_convergence.py"],
+    main = "test/plot_convergence.py",
+    tags = ["manual"],  # needs system matplotlib; not built by `bazel test //...`
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "generator",
+    srcs = ["src/generator.py"],
+    data = [
+        ":smoke_tester",
+        "//packages/balancer-strategies:strategy_hdr",
+    ],
+    main = "src/generator.py",
+    tags = ["manual"],  # needs ANTHROPIC_API_KEY and system anthropic SDK
+    visibility = ["//visibility:public"],
+)
+
+sh_test(
+    name = "llm_generator_stub_test",
+    srcs = ["test/stub_generator_test.sh"],
+    data = [
+        ":generator",
+        ":smoke_tester",
+        "//packages/balancer-strategies:strategy_hdr",
+    ],
+    env = {
+        "GENERATOR": "$(rootpath :generator)",
+        "SMOKE_BIN": "$(rootpath :smoke_tester)",
+        "STRATEGY_HDR": "$(rootpath //packages/balancer-strategies:strategy_hdr)",
+    },
+    tags = ["ci"],
+    target_compatible_with = LINUX_ONLY,
+)
