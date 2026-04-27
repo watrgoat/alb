@@ -1,4 +1,4 @@
-# ALB — Application Load Balancer
+# ALB — Adaptive Load Balancer
 
 High-performance load balancer with hot-swappable strategies and DPDK packet processing.
 
