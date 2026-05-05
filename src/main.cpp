@@ -98,6 +98,27 @@ static inline int port_init(uint16_t port, struct rte_mempool *mbuf_pool,
 	if (retval < 0)
 		return retval;
 
+	// Disable Ethernet PAUSE. Otherwise an overloaded ingress port emits
+	// PAUSE frames upstream and the generator throttles to whatever this
+	// port can absorb — `imissed` stays 0 and benchmarks measure the wire
+	// loop, not ALB saturation. With FC off, excess traffic is dropped at
+	// the NIC (visible as imissed) which is what we want to observe.
+	// Read-modify-write so we don't clobber high_water/low_water (zeroing
+	// them on i40e makes the NIC drop every packet at the wire).
+	struct rte_eth_fc_conf fc_conf;
+	int fc_ret = rte_eth_dev_flow_ctrl_get(port, &fc_conf);
+	if (fc_ret == 0) {
+		fc_conf.mode = RTE_ETH_FC_NONE;
+		// autoneg=1 lets the PHY re-negotiate PAUSE during link
+		// establishment, which silently re-enables flow control on
+		// some link cycles and throttles us. Force it off so mode
+		// sticks across runs.
+		fc_conf.autoneg = 0;
+		fc_ret = rte_eth_dev_flow_ctrl_set(port, &fc_conf);
+	}
+	if (fc_ret != 0 && fc_ret != -ENOTSUP)
+		printf("Port %u: flow_ctrl disable failed: %d\n", port, fc_ret);
+
 	struct rte_ether_addr addr;
 	retval = rte_eth_macaddr_get(port, &addr);
 	if (retval != 0)

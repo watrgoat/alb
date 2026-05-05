@@ -59,6 +59,22 @@ if [ "$(cat /proc/sys/vm/nr_hugepages 2>/dev/null || echo 0)" -lt 1024 ]; then
     echo 1024 > /proc/sys/vm/nr_hugepages
 fi
 
+# --- disable Ethernet PAUSE on every port ---------------------------------
+# i40e re-enables PAUSE on each link cycle when autoneg is on, even after
+# we set FC=NONE in DPDK. Force autoneg-pause off at the PHY level *before*
+# the kernel hands the port to vfio-pci so the setting survives the bind.
+# P4 stays on the kernel driver, so its PAUSE setting matters for the whole
+# run — without this, P4 -> P3 PAUSE would propagate back through the chain
+# and throttle the generator.
+echo "Disabling PAUSE on $P1 $P2 $P3 $P4..."
+for iface in "$P1" "$P2" "$P3" "$P4"; do
+    if [ -e "/sys/class/net/$iface" ]; then
+        ip link set "$iface" up || true
+        ethtool -A "$iface" autoneg off rx off tx off 2>/dev/null || true
+    fi
+done
+sleep 1   # let the link settle with the new pause config
+
 # --- bind P1/P2/P3 to vfio-pci, keep P4 on kernel -------------------------
 echo "Binding $P1 $P2 $P3 to vfio-pci..."
 mapfile -t PCIS < <("$SCRIPT_DIR/bind_ports.sh" "$P1" "$P2" "$P3")
@@ -69,8 +85,10 @@ echo "  $P1 -> $PCI_P1"
 echo "  $P2 -> $PCI_P2"
 echo "  $P3 -> $PCI_P3"
 
-# Bring up P4 for the XDP collector
+# Bring up P4 for the XDP collector. Re-apply PAUSE-off in case bind_ports.sh
+# bouncing P1/P2/P3 caused a link cycle that reset P4's setting.
 ip link set "$P4" up
+ethtool -A "$P4" autoneg off rx off tx off 2>/dev/null || true
 
 # Snapshot P4 rx counters so we can see if frames physically reach it,
 # independent of whether XDP counts them.
@@ -116,12 +134,16 @@ if ! kill -0 "$COL_PID" 2>/dev/null; then
 fi
 
 # --- start ALB on P2 (ingress) + P3 (egress) ------------------------------
-# DPDK port index 0 = first -a arg = P2, port 1 = P3. ALB's worker TXes on
-# (port ^ 1), so ingress P2 -> egress P3 and vice versa.
+# DPDK port index 0 = first -a arg = P2 (ingress), port 1 = P3 (egress).
+# Workers RX from port 0 only and TX to port 1.
 echo "Starting ALB on $PCI_P2 (ingress) + $PCI_P3 (egress)..."
-# Pin ALB to distinct physical cores (0..5 on this 8-core+HT box):
-#   0 = main (stats), 1 = manager (hot-reload watcher),
-#   2..5 = 4 forwarding workers, one per RX/TX queue (RSS across queues).
+# Pin ALB to distinct physical cores on this 8-core+HT box:
+#   lcore 0 = main (stats), 1 = manager (hot-reload watcher),
+#   lcores 2..5 = 4 forwarding workers, one per RX/TX queue (RSS across).
+# HT siblings of 0,1,6,7 (i.e. 8,9,14,15) get reused by the generator
+# below — those four lcores host gen workers that share a physical core
+# with an ALB thread that's nearly idle (main/manager) or with gen's own
+# main, so contention is minimal.
 "$ALB_BIN" -l 0,1,2,3,4,5 \
     -a "$PCI_P2" -a "$PCI_P3" \
     --file-prefix=alb \
@@ -137,19 +159,17 @@ fi
 
 # --- start traffic generator on P1 ---------------------------------------
 echo "Starting traffic-generator on $PCI_P1..."
-# Generator needs more than one TX worker to push past ~1.4 Mpps. Layout:
-#   lcore 6  -> main/stats       (phys 6)
-#   lcore 7  -> TX worker        (phys 7, dedicated)
-#   lcore 8  -> TX worker        (HT sibling of phys 0, shares with ALB main
-#                                 which only wakes ~1/s for stats)
-#   lcore 9  -> TX worker        (HT sibling of phys 1, shares with ALB
-#                                 manager which is blocked on epoll)
-#   lcore 14 -> TX worker        (HT sibling of phys 6, shares with gen's
-#                                 own main which sleeps 1s/s)
-#   lcore 15 -> RX drain         (HT sibling of phys 7, shares with TX
-#                                 worker on 7; drain is cheap, acceptable)
-# ALB workers on phys cores 2..5 and their HT siblings (10..13) are
-# deliberately left alone so ALB forwarding isn't starved.
+# Generator on HT siblings + the two free physical cores. Each TX worker
+# drives QUEUES_PER_TX_WORKER queues round-robin (see traffic-generator.c)
+# so 4 workers × 4 queues = 16 TX queues fed in parallel.
+#   lcore 6  -> main/stats        (phys 6)
+#   lcore 7  -> TX worker         (phys 7, dedicated)
+#   lcore 8  -> TX worker         (HT sibling of phys 0; ALB main wakes ~1/s)
+#   lcore 9  -> TX worker         (HT sibling of phys 1; ALB manager epoll-blocked)
+#   lcore 14 -> TX worker         (HT sibling of phys 6; gen main sleeps 1s/s)
+#   lcore 15 -> RX drain          (HT sibling of phys 7; cheap, acceptable share)
+# ALB workers on phys cores 2..5 and their HT siblings (10..13) are left
+# alone so ALB forwarding never contends for a physical core.
 "$GEN_BIN" -l 6,7,8,9,14,15 \
     -a "$PCI_P1" \
     --file-prefix=gen \

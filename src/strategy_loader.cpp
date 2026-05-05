@@ -120,84 +120,77 @@ int worker_main(void *arg)
 			my_index = idx;
 		}
 
-		uint16_t port;
-		RTE_ETH_FOREACH_DEV(port)
-		{
-			struct rte_mbuf *bufs[BURST_SIZE];
-			const uint16_t nb_rx =
-			    rte_eth_rx_burst(port, queue_id, bufs, BURST_SIZE);
+		struct rte_mbuf *bufs[BURST_SIZE];
+		const uint16_t nb_rx =
+		    rte_eth_rx_burst(0, queue_id, bufs, BURST_SIZE);
 
-			if (unlikely(nb_rx == 0))
+		if (unlikely(nb_rx == 0))
+			continue;
+
+		uint16_t nb_to_tx = 0;
+		for (uint16_t i = 0; i < nb_rx; i++) {
+			struct rte_mbuf *m = bufs[i];
+			struct rte_ether_hdr *eth_hdr =
+			    rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
+
+			if (eth_hdr->ether_type !=
+			    rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4)) {
+				rte_pktmbuf_free(m);
 				continue;
-
-			uint16_t nb_to_tx = 0;
-			for (uint16_t i = 0; i < nb_rx; i++) {
-				struct rte_mbuf *m = bufs[i];
-				struct rte_ether_hdr *eth_hdr =
-				    rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
-
-				if (eth_hdr->ether_type !=
-				    rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4)) {
-					rte_pktmbuf_free(m);
-					continue;
-				}
-
-				struct rte_ipv4_hdr *ip_hdr =
-				    reinterpret_cast<struct rte_ipv4_hdr *>(
-					eth_hdr + 1);
-
-				if (ip_hdr->next_proto_id != IPPROTO_UDP) {
-					rte_pktmbuf_free(m);
-					continue;
-				}
-
-				struct rte_udp_hdr *udp_hdr =
-				    reinterpret_cast<struct rte_udp_hdr *>(
-					reinterpret_cast<unsigned char *>(
-					    ip_hdr) +
-					(ip_hdr->version_ihl & 0x0F) * 4);
-
-				if (udp_hdr->dst_port != listen_port) {
-					rte_pktmbuf_free(m);
-					continue;
-				}
-
-				// include udp src_port so per-packet hash varies
-				// within a single (src_ip, dst_ip) flow. without
-				// this, the traffic-generator's pre-built bursts
-				// — which share src/dst IP but vary src_port —
-				// all collide to a single bucket and the weighted
-				// strategy sends 100% of traffic to one backend
-				// regardless of the weight vector.
-				StrategyInput input = {
-				    ip_hdr->src_addr ^ ip_hdr->dst_addr ^
-					static_cast<uint32_t>(udp_hdr->src_port),
-				    pkt_seq++};
-				ServerState *ss = strat->select(input);
-				int bidx = static_cast<int>(ss - server_states);
-
-				memcpy(eth_hdr->dst_addr.addr_bytes, &ss->mac,
-				       6);
-				ip_hdr->dst_addr = ss->address;
-				udp_hdr->dst_port = config.backends[bidx].port;
-
-				ip_hdr->hdr_checksum = 0;
-				ip_hdr->hdr_checksum = rte_ipv4_cksum(ip_hdr);
-				udp_hdr->dgram_cksum = 0;
-
-				bufs[nb_to_tx++] = m;
 			}
 
-			if (nb_to_tx == 0)
-				continue;
+			struct rte_ipv4_hdr *ip_hdr =
+			    reinterpret_cast<struct rte_ipv4_hdr *>(eth_hdr +
+								   1);
 
-			const uint16_t nb_tx = rte_eth_tx_burst(
-			    port ^ 1, queue_id, bufs, nb_to_tx);
-			if (unlikely(nb_tx < nb_to_tx)) {
-				for (uint16_t buf = nb_tx; buf < nb_to_tx;
-				     buf++)
-					rte_pktmbuf_free(bufs[buf]);
+			if (ip_hdr->next_proto_id != IPPROTO_UDP) {
+				rte_pktmbuf_free(m);
+				continue;
 			}
+
+			struct rte_udp_hdr *udp_hdr =
+			    reinterpret_cast<struct rte_udp_hdr *>(
+				reinterpret_cast<unsigned char *>(ip_hdr) +
+				(ip_hdr->version_ihl & 0x0F) * 4);
+
+			if (udp_hdr->dst_port != listen_port) {
+				rte_pktmbuf_free(m);
+				continue;
+			}
+
+			// include udp src_port so per-packet hash varies
+			// within a single (src_ip, dst_ip) flow. without
+			// this, the traffic-generator's pre-built bursts
+			// — which share src/dst IP but vary src_port —
+			// all collide to a single bucket and the weighted
+			// strategy sends 100% of traffic to one backend
+			// regardless of the weight vector.
+			StrategyInput input = {
+			    ip_hdr->src_addr ^ ip_hdr->dst_addr ^
+				static_cast<uint32_t>(udp_hdr->src_port),
+			    pkt_seq++};
+			ServerState *ss = strat->select(input);
+			int bidx = static_cast<int>(ss - server_states);
+
+			memcpy(eth_hdr->dst_addr.addr_bytes, &ss->mac, 6);
+			ip_hdr->dst_addr = ss->address;
+			udp_hdr->dst_port = config.backends[bidx].port;
+
+			ip_hdr->hdr_checksum = 0;
+			ip_hdr->hdr_checksum = rte_ipv4_cksum(ip_hdr);
+			udp_hdr->dgram_cksum = 0;
+
+			bufs[nb_to_tx++] = m;
+		}
+
+		if (nb_to_tx == 0)
+			continue;
+
+		const uint16_t nb_tx =
+		    rte_eth_tx_burst(1, queue_id, bufs, nb_to_tx);
+		if (unlikely(nb_tx < nb_to_tx)) {
+			for (uint16_t buf = nb_tx; buf < nb_to_tx; buf++)
+				rte_pktmbuf_free(bufs[buf]);
 		}
 	}
 
