@@ -5,10 +5,10 @@
 #   [traffic-generator]  P1 --cable--> P2  [ALB]  P3 --cable--> P4  [XDP collector]
 #
 # Defaults assume the four-port Mellanox-like NIC described in this tree:
-#   P1 = enp4s0f0np0 (TX)              -> DPDK (vfio-pci)
-#   P2 = enp4s0f1np1 (ALB ingress)     -> DPDK (vfio-pci)
-#   P3 = enp4s0f2np2 (ALB egress)      -> DPDK (vfio-pci)
-#   P4 = enp4s0f3np3 (XDP sink)        -> kernel
+#   P1 = enp5s0f0 (TX)              -> DPDK (vfio-pci)
+#   P2 = enp5s0f1 (ALB ingress)     -> DPDK (vfio-pci)
+#   P3 = enp5s0f2 (ALB egress)      -> DPDK (vfio-pci)
+#   P4 = enp5s0f3 (XDP sink)        -> kernel
 #
 # Outputs (in $OUTDIR, default test/results/<timestamp>):
 #   tx-stats.csv           -> input metric (generator TX pps, per second)
@@ -24,10 +24,10 @@ cd "$PROJECT_DIR"
 
 DURATION="${1:-30}"
 
-P1="${P1:-enp4s0f0np0}"  # generator TX
-P2="${P2:-enp4s0f1np1}"  # ALB ingress (DPDK)
-P3="${P3:-enp4s0f2np2}"  # ALB egress  (DPDK)
-P4="${P4:-enp4s0f3np3}"  # XDP collector sink (kernel)
+P1="${P1:-enp5s0f0}"  # generator TX
+P2="${P2:-enp5s0f1}"  # ALB ingress (DPDK)
+P3="${P3:-enp5s0f2}"  # ALB egress  (DPDK)
+P4="${P4:-enp5s0f3}"  # XDP collector sink (kernel)
 
 OUTDIR="${OUTDIR:-$SCRIPT_DIR/results/$(date +%Y%m%d-%H%M%S)}"
 
@@ -97,6 +97,13 @@ cleanup() {
 
     echo "Restoring kernel drivers on $P1 $P2 $P3..."
     "$SCRIPT_DIR/unbind_ports.sh" "$PCI_P1" "$PCI_P2" "$PCI_P3" || true
+
+    # Tests run under sudo, so OUTDIR and its files are owned by root and
+    # would block `git pull` / edits afterwards. Hand them back to the user
+    # who invoked sudo.
+    if [ -n "${SUDO_USER:-}" ] && [ -d "$OUTDIR" ]; then
+        chown -R "$SUDO_USER:$(id -gn "$SUDO_USER")" "$OUTDIR" || true
+    fi
 }
 trap cleanup EXIT INT TERM
 
@@ -119,7 +126,7 @@ fi
 # DPDK port index 0 = first -a arg = P2, port 1 = P3. ALB's worker TXes on
 # (port ^ 1), so ingress P2 -> egress P3 and vice versa.
 echo "Starting ALB on $PCI_P2 (ingress) + $PCI_P3 (egress)..."
-# Pin ALB to distinct physical cores (0..5 on this 8-core+HT box):
+# Pin ALB to distinct physical cores (0..5 on this 6-core+HT box):
 #   0 = main (stats), 1 = manager (hot-reload watcher),
 #   2..5 = 4 forwarding workers, one per RX/TX queue (RSS across queues).
 "$ALB_BIN" -l 0,1,2,3,4,5 \
@@ -137,20 +144,22 @@ fi
 
 # --- start traffic generator on P1 ---------------------------------------
 echo "Starting traffic-generator on $PCI_P1..."
-# Generator needs more than one TX worker to push past ~1.4 Mpps. Layout:
-#   lcore 6  -> main/stats       (phys 6)
-#   lcore 7  -> TX worker        (phys 7, dedicated)
-#   lcore 8  -> TX worker        (HT sibling of phys 0, shares with ALB main
-#                                 which only wakes ~1/s for stats)
-#   lcore 9  -> TX worker        (HT sibling of phys 1, shares with ALB
-#                                 manager which is blocked on epoll)
-#   lcore 14 -> TX worker        (HT sibling of phys 6, shares with gen's
-#                                 own main which sleeps 1s/s)
-#   lcore 15 -> RX drain         (HT sibling of phys 7, shares with TX
-#                                 worker on 7; drain is cheap, acceptable)
-# ALB workers on phys cores 2..5 and their HT siblings (10..13) are
-# deliberately left alone so ALB forwarding isn't starved.
-"$GEN_BIN" -l 6,7,8,9,14,15 \
+# Generator needs more than one TX worker to push past ~1.4 Mpps. ALB
+# already owns all 6 physical cores (0..5), so the generator runs on their
+# HT siblings (6..11; sibling of phys N is N+6). Layout:
+#   lcore 6  -> main/stats       (HT sibling of phys 0 = ALB main, which
+#                                 only wakes ~1/s for stats)
+#   lcore 7  -> TX worker        (HT sibling of phys 1 = ALB manager, which
+#                                 is blocked on epoll; effectively dedicated)
+#   lcore 8  -> TX worker        (HT sibling of phys 2 = ALB forwarding
+#                                 worker; shares, so expect some contention)
+#   lcore 9  -> TX worker        (HT sibling of phys 3 = ALB forwarding worker)
+#   lcore 10 -> TX worker        (HT sibling of phys 4 = ALB forwarding worker)
+#   lcore 11 -> RX drain         (HT sibling of phys 5 = ALB forwarding
+#                                 worker; drain is cheap, acceptable)
+# Unlike the 16-lcore layout there are no spare cores to isolate ALB's
+# forwarding workers, so gen TX (8..10) shares HT siblings with them.
+"$GEN_BIN" -l 6,7,8,9,10,11 \
     -a "$PCI_P1" \
     --file-prefix=gen \
     -- "$OUTDIR/tx-stats.csv" \

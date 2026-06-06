@@ -24,6 +24,16 @@ backends:
 
 ## Build
 
+This package depends on **libyaml**. The `yaml.h` header ships in the `-dev`
+package, which is not installed by default — only the runtime library is. Install
+it before building:
+
+```bash
+sudo apt-get install libyaml-dev
+```
+
+Then:
+
 ```bash
 bazel build //packages/config:config
 ```

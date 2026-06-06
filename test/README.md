@@ -18,10 +18,10 @@ Two end-to-end tests live here:
 
 | Port | Default iface | Role                       | Driver   |
 | ---- | ------------- | -------------------------- | -------- |
-| P1   | `enp4s0f0np0` | traffic-generator TX       | vfio-pci |
-| P2   | `enp4s0f1np1` | ALB ingress                | vfio-pci |
-| P3   | `enp4s0f2np2` | ALB egress                 | vfio-pci |
-| P4   | `enp4s0f3np3` | XDP collector (kernel RX)  | kernel   |
+| P1   | `enp5s0f0` | traffic-generator TX       | vfio-pci |
+| P2   | `enp5s0f1` | ALB ingress                | vfio-pci |
+| P3   | `enp5s0f2` | ALB egress                 | vfio-pci |
+| P4   | `enp5s0f3` | XDP collector (kernel RX)  | kernel   |
 
 Cable **P1↔P2** and **P3↔P4**. P4 stays on the kernel driver so XDP can
 attach; P1/P2/P3 are taken over by DPDK.

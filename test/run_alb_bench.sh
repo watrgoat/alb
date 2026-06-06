@@ -27,9 +27,9 @@ cd "$PROJECT_DIR"
 
 DURATION="${1:-30}"
 
-P1="${P1:-enp4s0f0np0}"  # generator TX
-P2="${P2:-enp4s0f1np1}"  # ALB ingress (DPDK)
-P3="${P3:-enp4s0f2np2}"  # ALB egress  (DPDK)
+P1="${P1:-enp5s0f0}"  # generator TX
+P2="${P2:-enp5s0f1}"  # ALB ingress (DPDK)
+P3="${P3:-enp5s0f2}"  # ALB egress  (DPDK)
 
 OUTDIR="${OUTDIR:-$SCRIPT_DIR/results/$(date +%Y%m%d-%H%M%S)-albbench}"
 
@@ -91,6 +91,13 @@ cleanup() {
 
     echo "Restoring kernel drivers on $P1 $P2 $P3..."
     "$SCRIPT_DIR/unbind_ports.sh" "$PCI_P1" "$PCI_P2" "$PCI_P3" || true
+
+    # Tests run under sudo, so OUTDIR and its files are owned by root and
+    # would block `git pull` / edits afterwards. Hand them back to the user
+    # who invoked sudo.
+    if [ -n "${SUDO_USER:-}" ] && [ -d "$OUTDIR" ]; then
+        chown -R "$SUDO_USER:$(id -gn "$SUDO_USER")" "$OUTDIR" || true
+    fi
 }
 trap cleanup EXIT INT TERM
 
@@ -112,7 +119,7 @@ fi
 # --- start traffic generator on P1 ---------------------------------------
 echo "Starting traffic-generator on $PCI_P1..."
 # See run_4port_test.sh for the lcore layout rationale.
-"$GEN_BIN" -l 6,7,8,9,14,15 \
+"$GEN_BIN" -l 6,7,8,9,10,11 \
     -a "$PCI_P1" \
     --file-prefix=gen \
     -- "$OUTDIR/tx-stats.csv" \

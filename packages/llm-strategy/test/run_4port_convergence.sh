@@ -36,10 +36,10 @@ cd "$PROJECT_DIR"
 
 DURATION="${1:-210}"
 
-P1="${P1:-enp4s0f0np0}"
-P2="${P2:-enp4s0f1np1}"
-P3="${P3:-enp4s0f2np2}"
-P4="${P4:-enp4s0f3np3}"
+P1="${P1:-enp5s0f0}"
+P2="${P2:-enp5s0f1}"
+P3="${P3:-enp5s0f2}"
+P4="${P4:-enp5s0f3}"
 
 OUTDIR="${OUTDIR:-$PROJECT_DIR/test/results/$(date +%Y%m%d-%H%M%S)-conv}"
 SCHEDULE="${SCHEDULE:-$SCRIPT_DIR/caps_schedule_default.json}"
@@ -153,6 +153,13 @@ cleanup() {
     done
     echo "Restoring kernel drivers on $P1 $P2 $P3..."
     "$PROJECT_DIR/test/unbind_ports.sh" "$PCI_P1" "$PCI_P2" "$PCI_P3" || true
+
+    # Tests run under sudo, so OUTDIR and its files are owned by root and
+    # would block `git pull` / edits afterwards. Hand them back to the user
+    # who invoked sudo.
+    if [ -n "${SUDO_USER:-}" ] && [ -d "$OUTDIR" ]; then
+        chown -R "$SUDO_USER:$(id -gn "$SUDO_USER")" "$OUTDIR" || true
+    fi
 }
 trap cleanup EXIT INT TERM
 
@@ -255,7 +262,7 @@ fi
 
 # --- start traffic generator ---------------------------------------------
 echo "Starting traffic-generator on $PCI_P1..."
-"$GEN_BIN" -l 6,7,8,9,14,15 \
+"$GEN_BIN" -l 6,7,8,9,10,11 \
     -a "$PCI_P1" \
     --file-prefix=gen \
     -- "$OUTDIR/tx-stats.csv" \
